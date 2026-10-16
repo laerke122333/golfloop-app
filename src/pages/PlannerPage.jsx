@@ -66,6 +66,7 @@ export default function PlannerPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [trainingName, setTrainingName] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -318,6 +319,11 @@ export default function PlannerPage() {
       return;
     }
 
+    if (!trainingName.trim()) {
+      setError("Giv træningen et navn, før du gemmer den.");
+      return;
+    }
+
     const sessionMinutes =
       mode === "manual" ? totalPlannedMinutes : Number(minutes);
 
@@ -355,7 +361,7 @@ export default function PlannerPage() {
       .from("training_sessions")
       .insert({
         user_id: user.id,
-        title: `Træning · ${dateLabel}`,
+        title: trainingName.trim(),
         duration_minutes: sessionMinutes,
         focus_areas: sessionFocusAreas,
         // Alle faciliteter antages tilgængelige i GolfLoop.
@@ -668,6 +674,19 @@ export default function PlannerPage() {
               </div>
             )}
 
+            <div className="training-name-field">
+              <label htmlFor="training-name">Navngiv din træning</label>
+
+              <input
+                id="training-name"
+                type="text"
+                value={trainingName}
+                onChange={(event) => setTrainingName(event.target.value)}
+                placeholder="Fx Wedges før turnering"
+                maxLength={60}
+              />
+            </div>
+            
             <div className="plan-preview-footer">
               <button
                 className="button button-primary button-large panel-full-button"

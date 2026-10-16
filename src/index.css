@@ -1811,4 +1811,48 @@ code { border-radius: 4px; padding: 2px 4px; color: #405c3b; background: #f0f4eb
     flex: 1;
     min-height: 44px;
   }
+}.training-name-field {
+  margin-bottom: 18px;
+}
+
+.training-name-field label {
+  display: block;
+  margin-bottom: 8px;
+
+  color: #687466;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.training-name-field input {
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 13px 15px;
+
+  border: 1px solid #d8dfd3;
+  border-radius: 12px;
+
+  background: #ffffff;
+  color: #26342c;
+
+  font-family: inherit;
+  font-size: 15px;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.training-name-field input::placeholder {
+  color: #a2aaa0;
+}
+
+.training-name-field input:focus {
+  border-color: #52734d;
+  box-shadow: 0 0 0 3px rgba(82, 115, 77, 0.1);
 }
