@@ -2152,3 +2152,22 @@ code { border-radius: 4px; padding: 2px 4px; color: #405c3b; background: #f0f4eb
   font-size: 0.72rem;
   color: #7a7f77;
 }
+.manual-exercise-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.manual-exercise-favorite {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(82, 115, 77, 0.12);
+  color: #52734d;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+}

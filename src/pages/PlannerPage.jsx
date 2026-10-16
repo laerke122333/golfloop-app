@@ -8,6 +8,7 @@ import {
   ChevronDown,
   Clock3,
   Flag,
+  Heart,
   LoaderCircle,
   Play,
   Save,
@@ -126,18 +127,20 @@ export default function PlannerPage() {
         ),
       );
 
-     console.log("FAVORITTER:", favoriteResult.data);
+      console.log("FAVORITTER:", favoriteResult.data);
 
-     console.log(
-       "FAVORIT ØVELSER:",
-       (exerciseResult.data || [])
-         .filter((exercise) =>
-           (favoriteResult.data || []).some(
-             (favorite) => favorite.exercise_id === exercise.id,
-           ),
-         )
-         .map((exercise) => `${exercise.category}: ${exercise.title}`),
-     );
+      console.log(
+        "FAVORIT ØVELSER:",
+        (exerciseResult.data || [])
+          .filter((exercise) =>
+            (favoriteResult.data || []).some(
+              (favorite) => favorite.exercise_id === exercise.id,
+            ),
+          )
+          .map((exercise) => `${exercise.category}: ${exercise.title}`),
+      );
+
+      setLoading(false);
     }
 
     if (user) loadPlannerData();
@@ -618,7 +621,16 @@ export default function PlannerPage() {
                             aria-pressed={selected}
                           >
                             <span className="manual-exercise-copy">
-                              <strong>{exercise.title}</strong>
+                              <span className="manual-exercise-title-row">
+                                <strong>{exercise.title}</strong>
+
+                                {favoriteIds.has(exercise.id) && (
+                                  <span className="manual-exercise-favorite">
+                                    <Heart size={14} fill="currentColor" />
+                                    Favorit
+                                  </span>
+                                )}
+                              </span>
 
                               <small>
                                 {exercise.duration_minutes} min. ·{" "}
