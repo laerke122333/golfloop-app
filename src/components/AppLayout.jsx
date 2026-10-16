@@ -9,6 +9,7 @@ import {
   Menu,
   PlusCircle,
   Sparkles,
+  Target,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -17,9 +18,10 @@ import { useAuth } from "../context/AuthContext";
 const navItems = [
   { to: "/", label: "Overblik", icon: Activity, end: true },
   { to: "/planner", label: "Planlæg træning", icon: CalendarDays },
+  { to: "/exercises", label: "Øvelser", icon: Target },
   { to: "/history", label: "Tidligere", icon: History },
   { to: "/round-review", label: "Efter runden", icon: Flag },
-  { to: "/profile", label: "Min profil", icon: Activity },
+  { to: "/profile", label: "Mit udstyr", icon: Activity },
 ];
 
 export default function AppLayout() {
@@ -153,27 +155,31 @@ export default function AppLayout() {
       </main>
 
       <nav className="mobile-bottom-nav" aria-label="Mobil navigation">
-        {navItems.map(({ to, label, icon: Icon, end }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            className={({ isActive }) =>
-              `mobile-bottom-nav-item ${
-                isActive ? "mobile-bottom-nav-item-active" : ""
-              }`
-            }
-          >
-            <Icon size={21} strokeWidth={1.9} />
+        {navItems
+          .filter(({ to }) =>
+            ["/", "/planner", "/history", "/round-review"].includes(to),
+          )
+          .map(({ to, label, icon: Icon, end }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) =>
+                `mobile-bottom-nav-item ${
+                  isActive ? "mobile-bottom-nav-item-active" : ""
+                }`
+              }
+            >
+              <Icon size={21} strokeWidth={1.9} />
 
-            <span>
-              {to === "/" && "Overblik"}
-              {to === "/planner" && "Træning"}
-              {to === "/history" && "Tidligere"}
-              {to === "/round-review" && "Runden"}
-            </span>
-          </NavLink>
-        ))}
+              <span>
+                {to === "/" && "Overblik"}
+                {to === "/planner" && "Træning"}
+                {to === "/history" && "Tidligere"}
+                {to === "/round-review" && "Runden"}
+              </span>
+            </NavLink>
+          ))}
       </nav>
     </div>
   );
