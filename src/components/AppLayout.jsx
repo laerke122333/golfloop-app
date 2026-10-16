@@ -2,14 +2,13 @@ import React from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   Activity,
-  BookOpen,
   CalendarDays,
   Flag,
+  History,
   LogOut,
   Menu,
   PlusCircle,
   Sparkles,
-  Target,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -18,7 +17,7 @@ import { useAuth } from "../context/AuthContext";
 const navItems = [
   { to: "/", label: "Overblik", icon: Activity, end: true },
   { to: "/planner", label: "Planlæg træning", icon: CalendarDays },
-  { to: "/exercises", label: "Øvelsesbibliotek", icon: BookOpen },
+  { to: "/history", label: "Tidligere", icon: History },
   { to: "/round-review", label: "Efter runden", icon: Flag },
 ];
 
@@ -169,7 +168,7 @@ export default function AppLayout() {
             <span>
               {to === "/" && "Overblik"}
               {to === "/planner" && "Træning"}
-              {to === "/exercises" && "Øvelser"}
+              {to === "/history" && "Tidligere"}
               {to === "/round-review" && "Runden"}
             </span>
           </NavLink>

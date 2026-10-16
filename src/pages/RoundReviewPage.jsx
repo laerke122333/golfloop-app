@@ -71,9 +71,6 @@ export default function RoundReviewPage() {
             du vil arbejde med næste gang.
           </p>
         </div>
-        <div className="page-header-icon">
-          <Flag size={25} />
-        </div>
       </div>
 
       <form className="review-form-layout" onSubmit={handleSubmit}>

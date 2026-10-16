@@ -8,6 +8,7 @@ import {
   Flag,
   Plus,
   Target,
+  Trash2,
   TrendingUp,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -76,6 +77,39 @@ export default function DashboardPage() {
     };
   }, [user]);
 
+  async function deleteSession(sessionId) {
+    const sessionToDelete = sessions.find(
+      (session) => session.id === sessionId,
+    );
+
+    if (!sessionToDelete) return;
+
+    const confirmed = window.confirm(
+      `Vil du slette "${sessionToDelete.title || "denne træning"}"?\n\nTræningen og dens øvelser, tider og noter bliver slettet permanent.`,
+    );
+
+    if (!confirmed) return;
+
+    setError("");
+
+    const { error: deleteError } = await supabase
+      .from("training_sessions")
+      .delete()
+      .eq("id", sessionId)
+      .eq("user_id", user.id);
+
+    if (deleteError) {
+      setError(`Træningen kunne ikke slettes: ${deleteError.message}`);
+      return;
+    }
+
+    setSessions((current) =>
+      current.filter((session) => session.id !== sessionId),
+    );
+
+    setSessionCount((current) => Math.max(0, current - 1));
+  }
+
   const firstName =
     user?.email?.split("@")[0]?.split(/[._-]/)[0] || "golfspiller";
   const latestReview = reviews[0];
@@ -116,7 +150,7 @@ export default function DashboardPage() {
       <section className="hero-card">
         <div className="hero-text">
           <span className="hero-pill">
-            <SparkleIcon /> DIN NÆSTE FORBEDRING STARTER HER
+             DIN NÆSTE FORBEDRING STARTER HER
           </span>
           <h2>
             Spil. Lær.
@@ -136,10 +170,6 @@ export default function DashboardPage() {
           <div className="hero-circle hero-circle-two" />
           <div className="hero-course-line hero-line-one" />
           <div className="hero-course-line hero-line-two" />
-          <div className="hero-flag">
-            <Flag size={25} />
-          </div>
-          <div className="hero-ball" />
           <div className="hero-distance">DIT NÆSTE SLAG</div>
         </div>
       </section>
@@ -162,9 +192,6 @@ export default function DashboardPage() {
           <div className="stat-foot">Venter på dig</div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon stat-icon-blue">
-            <Flag size={20} />
-          </div>
           <div className="stat-label">Seneste evalueringer</div>
           <div className="stat-value">{loading ? "—" : reviews.length}</div>
           <div className="stat-foot">Maks. 3 seneste vises</div>
@@ -189,33 +216,49 @@ export default function DashboardPage() {
           ) : sessions.length ? (
             <div className="session-list">
               {sessions.map((session) => (
-                <Link
-                  key={session.id}
-                  to={`/sessions/${session.id}`}
-                  className="session-row"
-                >
-                  <div
-                    className={`session-row-icon ${session.status === "completed" ? "is-complete" : ""}`}
+                <div className="session-row" key={session.id}>
+                  <Link
+                    to={`/sessions/${session.id}`}
+                    className="session-row-link"
                   >
-                    {session.status === "completed" ? (
-                      <CheckCircle2 size={20} />
-                    ) : (
-                      <Target size={20} />
-                    )}
-                  </div>
-                  <div className="session-row-main">
-                    <strong>{session.title || "Min træning"}</strong>
-                    <span>
-                      {(session.focus_areas || []).join(" · ") ||
-                        "Personlig træning"}
-                    </span>
-                  </div>
-                  <div className="session-row-meta">
-                    <span>{session.duration_minutes} min.</span>
-                    <small>{formatDate(session.created_at)}</small>
-                  </div>
-                  <ArrowRight className="session-arrow" size={17} />
-                </Link>
+                    <div
+                      className={`session-row-icon ${
+                        session.status === "completed" ? "is-complete" : ""
+                      }`}
+                    >
+                      {session.status === "completed" ? (
+                        <CheckCircle2 size={20} />
+                      ) : (
+                        <Target size={20} />
+                      )}
+                    </div>
+
+                    <div className="session-row-main">
+                      <strong>{session.title || "Min træning"}</strong>
+                      <span>
+                        {(session.focus_areas || []).join(" · ") ||
+                          "Personlig træning"}
+                      </span>
+                    </div>
+
+                    <div className="session-row-meta">
+                      <span>{session.duration_minutes} min.</span>
+                      <small>{formatDate(session.created_at)}</small>
+                    </div>
+
+                    <ArrowRight className="session-arrow" size={17} />
+                  </Link>
+
+                  <button
+                    type="button"
+                    className="session-delete-button"
+                    onClick={() => deleteSession(session.id)}
+                    aria-label={`Slet ${session.title || "træning"}`}
+                    title="Slet træning"
+                  >
+                    <Trash2 size={17} />
+                  </button>
+                </div>
               ))}
             </div>
           ) : (
@@ -240,9 +283,6 @@ export default function DashboardPage() {
             <div>
               <div className="eyebrow">LÆR AF DIT SPIL</div>
               <h2>Efter runden</h2>
-            </div>
-            <div className="round-icon">
-              <Flag size={19} />
             </div>
           </div>
           {loading ? (

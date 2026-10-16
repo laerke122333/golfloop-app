@@ -10,6 +10,7 @@ import PlannerPage from "./pages/PlannerPage";
 import ExercisesPage from "./pages/ExercisesPage";
 import RoundReviewPage from "./pages/RoundReviewPage";
 import SessionDetailPage from "./pages/SessionDetailPage";
+import HistoryPage from "./pages/HistoryPage";
 import { isSupabaseConfigured } from "./lib/supabaseClient";
 
 function SetupRequired() {
@@ -110,6 +111,7 @@ export default function App() {
           <Route path="/exercises" element={<ExercisesPage />} />
           <Route path="/round-review" element={<RoundReviewPage />} />
           <Route path="/sessions/:sessionId" element={<SessionDetailPage />} />
+          <Route path="/history" element={<HistoryPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
