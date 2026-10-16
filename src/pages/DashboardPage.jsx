@@ -7,6 +7,7 @@ import {
   Clock3,
   Flag,
   Plus,
+  Repeat2,
   Target,
   Trash2,
   TrendingUp,
@@ -38,7 +39,95 @@ export default function DashboardPage() {
   const [sessionCount, setSessionCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [repeatingSessionId, setRepeatingSessionId] = useState(null);
 
+
+  async function repeatTraining(session) {
+    setError("");
+    setRepeatingSessionId(session.id);
+
+    try {
+      // 1. Hent alle øvelser fra den gamle træning
+      const { data: originalExercises, error: exercisesError } = await supabase
+        .from("training_session_exercises")
+        .select(
+          "exercise_id,exercise_title,category,description,instructions,duration_minutes,position",
+        )
+        .eq("session_id", session.id)
+        .order("position", { ascending: true });
+
+      if (exercisesError) {
+        throw exercisesError;
+      }
+
+      if (!originalExercises?.length) {
+        throw new Error("Denne træning indeholder ingen øvelser.");
+      }
+
+      // 2. Opret en NY træning
+      const { data: newSession, error: sessionError } = await supabase
+        .from("training_sessions")
+        .insert({
+          user_id: user.id,
+          title: session.title || "Min træning",
+          duration_minutes: session.duration_minutes,
+          focus_areas: session.focus_areas || [],
+          facility: session.facility || "Flere faciliteter",
+          prioritize_recent_round: Boolean(session.prioritize_recent_round),
+          status: "planned",
+        })
+        .select()
+        .single();
+
+      if (sessionError) {
+        throw sessionError;
+      }
+
+      // 3. Kopiér øvelserne til den nye træning
+      const newExercises = originalExercises.map((exercise, index) => ({
+        session_id: newSession.id,
+        exercise_id: exercise.exercise_id,
+        exercise_title: exercise.exercise_title,
+        category: exercise.category,
+        description: exercise.description,
+        instructions: exercise.instructions || [],
+        duration_minutes: Number(exercise.duration_minutes),
+        position: index,
+
+        // Ny træning starter fra 0
+        completed: false,
+        result_notes: null,
+        actual_duration_seconds: 0,
+      }));
+
+      // 4. Gem de nye øvelser
+      const { error: insertError } = await supabase
+        .from("training_session_exercises")
+        .insert(newExercises);
+
+      if (insertError) {
+        // Hvis øvelserne ikke kan gemmes,
+        // så fjern den nye træning igen
+        await supabase
+          .from("training_sessions")
+          .delete()
+          .eq("id", newSession.id)
+          .eq("user_id", user.id);
+
+        throw insertError;
+      }
+
+      // 5. Åbn den nye kopi
+      navigate(`/sessions/${newSession.id}`);
+    } catch (repeatError) {
+      console.error("Fejl ved gentagelse af træning:", repeatError);
+
+      setError(`Træningen kunne ikke gentages: ${repeatError.message}`);
+    } finally {
+      setRepeatingSessionId(null);
+    }
+  }
+  
   useEffect(() => {
     let active = true;
     async function loadDashboard() {
@@ -47,7 +136,9 @@ export default function DashboardPage() {
       const [sessionResult, countResult, reviewResult] = await Promise.all([
         supabase
           .from("training_sessions")
-          .select("id,title,duration_minutes,status,created_at,focus_areas")
+          .select(
+            "id,title,duration_minutes,status,created_at,focus_areas,facility,prioritize_recent_round",
+          )
           .order("created_at", { ascending: false })
           .limit(4),
         supabase
@@ -91,6 +182,88 @@ export default function DashboardPage() {
     if (!confirmed) return;
 
     setError("");
+
+    async function repeatTraining(session) {
+      setError("");
+      setRepeatingSessionId(session.id);
+
+      try {
+        // Hent øvelserne fra den gamle træning
+        const { data: originalExercises, error: exercisesError } =
+          await supabase
+            .from("training_session_exercises")
+            .select(
+              "exercise_id,exercise_title,category,description,instructions,duration_minutes,position",
+            )
+            .eq("session_id", session.id)
+            .order("position", { ascending: true });
+
+        if (exercisesError) throw exercisesError;
+
+        if (!originalExercises?.length) {
+          throw new Error("Træningen indeholder ingen øvelser.");
+        }
+
+        // Opret en NY træning
+        const { data: newSession, error: sessionError } = await supabase
+          .from("training_sessions")
+          .insert({
+            user_id: user.id,
+            title: session.title || "Min træning",
+            duration_minutes: session.duration_minutes,
+            focus_areas: session.focus_areas || [],
+            facility: session.facility || "Flere faciliteter",
+            prioritize_recent_round: Boolean(session.prioritize_recent_round),
+            status: "planned",
+          })
+          .select()
+          .single();
+
+        if (sessionError || !newSession) {
+          throw (
+            sessionError || new Error("Den nye træning kunne ikke oprettes.")
+          );
+        }
+
+        // Kopiér øvelserne – men nulstil resultat/tid
+        const newExercises = originalExercises.map((exercise, index) => ({
+          session_id: newSession.id,
+          exercise_id: exercise.exercise_id,
+          exercise_title: exercise.exercise_title,
+          category: exercise.category,
+          description: exercise.description,
+          instructions: exercise.instructions || [],
+          duration_minutes: Number(exercise.duration_minutes),
+          position: index,
+          completed: false,
+          result_notes: null,
+          actual_duration_seconds: 0,
+        }));
+
+        const { error: insertExercisesError } = await supabase
+          .from("training_session_exercises")
+          .insert(newExercises);
+
+        if (insertExercisesError) {
+          await supabase
+            .from("training_sessions")
+            .delete()
+            .eq("id", newSession.id)
+            .eq("user_id", user.id);
+
+          throw insertExercisesError;
+        }
+
+        // Åbn den nye kopi
+        navigate(`/sessions/${newSession.id}`);
+      } catch (repeatError) {
+        console.error("GolfLoop repeat-fejl:", repeatError);
+
+        setError(`Træningen kunne ikke gentages: ${repeatError.message}`);
+      } finally {
+        setRepeatingSessionId(null);
+      }
+    }
 
     const { error: deleteError } = await supabase
       .from("training_sessions")
@@ -149,9 +322,7 @@ export default function DashboardPage() {
 
       <section className="hero-card">
         <div className="hero-text">
-          <span className="hero-pill">
-             DIN NÆSTE FORBEDRING STARTER HER
-          </span>
+          <span className="hero-pill">DIN NÆSTE FORBEDRING STARTER HER</span>
           <h2>
             Spil. Lær.
             <br />
@@ -235,19 +406,53 @@ export default function DashboardPage() {
 
                     <div className="session-row-main">
                       <strong>{session.title || "Min træning"}</strong>
+
                       <span>
                         {(session.focus_areas || []).join(" · ") ||
                           "Personlig træning"}
+                      </span>
+
+                      <span
+                        className={`session-status-badge session-status-${session.status}`}
+                      >
+                        {session.status === "completed"
+                          ? "Gennemført"
+                          : session.status === "in_progress"
+                            ? "I gang"
+                            : "Gemt"}
                       </span>
                     </div>
 
                     <div className="session-row-meta">
                       <span>{session.duration_minutes} min.</span>
-                      <small>{formatDate(session.created_at)}</small>
+                      <small>
+                        {formatDate(
+                          session.status === "completed"
+                            ? session.completed_at
+                            : session.created_at,
+                        )}
+                      </small>
                     </div>
 
                     <ArrowRight className="session-arrow" size={17} />
                   </Link>
+
+                  {session.status === "completed" && (
+                    <button
+                      type="button"
+                      className="session-repeat-button"
+                      onClick={() => repeatTraining(session)}
+                      disabled={repeatingSessionId === session.id}
+                    >
+                      <Repeat2 size={15} />
+
+                      {repeatingSessionId === session.id
+                        ? "Opretter…"
+                        : "Gennemfør igen"}
+                    </button>
+                  )}
+
+                  {/* Din slet-knap kommer her */}
 
                   <button
                     type="button"

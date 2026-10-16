@@ -9,6 +9,7 @@ import {
   LoaderCircle,
   Pause,
   Play,
+  Repeat2,
   Save,
   Target,
 } from "lucide-react";
@@ -52,6 +53,7 @@ export default function SessionDetailPage() {
   const baseElapsedRef = useRef(0);
   const activeItemIdRef = useRef(null);
   const itemsRef = useRef([]);
+  
 
   useEffect(() => {
     activeItemIdRef.current = activeItemId;
@@ -329,6 +331,50 @@ export default function SessionDetailPage() {
     }
   }
 
+  // Færdiggør en øvelse uden timer
+  async function completeExerciseWithoutTimer(itemId) {
+    if (isCompleted) return;
+
+    setSaving(true);
+    setError("");
+    setNotice("");
+
+    try {
+      const selectedItem = itemsRef.current.find((item) => item.id === itemId);
+
+      if (!selectedItem) return;
+
+      const { error: updateError } = await supabase
+        .from("training_session_exercises")
+        .update({
+          completed: true,
+        })
+        .eq("id", itemId);
+
+      if (updateError) throw updateError;
+
+      const nextItems = itemsRef.current.map((item) =>
+        item.id === itemId
+          ? {
+              ...item,
+              completed: true,
+            }
+          : item,
+      );
+
+      itemsRef.current = nextItems;
+      setItems(nextItems);
+
+      setNotice(`${selectedItem.exercise_title} er markeret som færdig.`);
+    } catch (completeError) {
+      setError(
+        `Øvelsen kunne ikke markeres som færdig: ${completeError.message}`,
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
   function updateItem(itemId, field, value) {
     setItems((current) =>
       current.map((item) =>
@@ -346,7 +392,27 @@ export default function SessionDetailPage() {
 
     setSaving(true);
     setError("");
+async function saveAndExit() {
+  const saved = await saveExerciseNotes();
 
+  if (!saved) return;
+
+  // Hvis træningen var startet, gem den som "planlagt/gemt"
+  const { error: statusError } = await supabase
+    .from("training_sessions")
+    .update({
+      status: "planned",
+    })
+    .eq("id", session.id)
+    .eq("user_id", user.id);
+
+  if (statusError) {
+    setError(`Træningen kunne ikke gemmes: ${statusError.message}`);
+    return;
+  }
+
+  navigate("/");
+}
     try {
       for (const item of itemsRef.current) {
         const { error: updateError } = await supabase
@@ -372,43 +438,149 @@ export default function SessionDetailPage() {
   }
 
   async function completeTraining() {
-    if (!session || completedCount !== items.length || items.length === 0) {
-      return;
+  if (!session || completedCount !== items.length || items.length === 0) {
+    return;
+  }
+
+  const allSaved = await saveExerciseNotes();
+  if (!allSaved) return;
+
+  setSaving(true);
+  setError("");
+
+  async function saveAndGoHome() {
+    const saved = await saveExerciseNotes();
+
+    if (saved) {
+      navigate("/");
+    }
+  }
+  try {
+    const { data, error: updateError } = await supabase
+      .from("training_sessions")
+      .update({
+        status: "completed",
+        completed_at: new Date().toISOString(),
+      })
+      .eq("id", session.id)
+      .eq("user_id", user.id)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+
+    setSession((current) => ({
+      ...current,
+      ...data,
+    }));
+
+    setActiveItemId(null);
+    activeItemIdRef.current = null;
+    setTimerRunning(false);
+    timerStartedAtRef.current = null;
+
+    setNotice("Flot arbejde! Træningen er markeret som gennemført.");
+
+    navigate("/");
+  } catch (completeError) {
+    setError(
+      `Træningen kunne ikke afsluttes: ${completeError.message}`
+    );
+  } finally {
+    setSaving(false);
+  }
+}
+
+    async function repeatTraining() {
+  setSaving(true);
+  setError("");
+  setNotice("");
+  
+
+  try {
+    const { data: originalExercises, error: exercisesError } =
+      await supabase
+        .from("training_session_exercises")
+        .select(
+          "exercise_id,exercise_title,category,description,instructions,duration_minutes,position"
+        )
+        .eq("session_id", session.id)
+        .order("position", { ascending: true });
+
+    if (exercisesError) {
+      throw exercisesError;
     }
 
-    const allSaved = await saveExerciseNotes();
-    if (!allSaved) return;
+    if (!originalExercises?.length) {
+      throw new Error("Denne træning indeholder ingen øvelser.");
+    }
 
-    setSaving(true);
-    setError("");
-
-    try {
-      const { data, error: updateError } = await supabase
+    const { data: newSession, error: sessionError } =
+      await supabase
         .from("training_sessions")
-        .update({
-          status: "completed",
-          completed_at: new Date().toISOString(),
+        .insert({
+          user_id: user.id,
+          title: session.title || "Min træning",
+          duration_minutes: session.duration_minutes,
+          focus_areas: session.focus_areas || [],
+          facility: session.facility || "Flere faciliteter",
+          prioritize_recent_round: Boolean(
+            session.prioritize_recent_round
+          ),
+          status: "planned",
         })
-        .eq("id", session.id)
-        .eq("user_id", user.id)
         .select()
         .single();
 
-      if (updateError) throw updateError;
-
-      setSession((current) => ({ ...current, ...data }));
-      setActiveItemId(null);
-      activeItemIdRef.current = null;
-      setTimerRunning(false);
-      timerStartedAtRef.current = null;
-      setNotice("Flot arbejde! Træningen er markeret som gennemført.");
-    } catch (completeError) {
-      setError(`Træningen kunne ikke afsluttes: ${completeError.message}`);
-    } finally {
-      setSaving(false);
+    if (sessionError) {
+      throw sessionError;
     }
-  }
 
+    const newExercises = originalExercises.map((exercise, index) => ({
+      session_id: newSession.id,
+      exercise_id: exercise.exercise_id,
+      exercise_title: exercise.exercise_title,
+      category: exercise.category,
+      description: exercise.description,
+      instructions: exercise.instructions || [],
+      duration_minutes: Number(exercise.duration_minutes),
+      position: index,
+      completed: false,
+      result_notes: null,
+      actual_duration_seconds: 0,
+    }));
+
+    const { error: insertError } =
+      await supabase
+        .from("training_session_exercises")
+        .insert(newExercises);
+
+    if (insertError) {
+      await supabase
+        .from("training_sessions")
+        .delete()
+        .eq("id", newSession.id)
+        .eq("user_id", user.id);
+
+      throw insertError;
+    }
+
+    navigate(`/sessions/${newSession.id}`);
+  } catch (repeatError) {
+    console.error(
+      "Fejl ved gentagelse af træning:",
+      repeatError
+    );
+
+    setError(
+      `Træningen kunne ikke gentages: ${repeatError.message}`
+    );
+  } finally {
+    setSaving(false);
+  }
+}
+
+   
   // Opdater den synlige timer 4 gange i sekundet.
   useEffect(() => {
     if (!timerRunning) return undefined;
@@ -530,8 +702,6 @@ export default function SessionDetailPage() {
           <div className="progress-fill" style={{ width: `${progress}%` }} />
         </div>
       </div>
-
-      
 
       {activeItem && (
         <section className="active-exercise-panel">
@@ -724,7 +894,13 @@ export default function SessionDetailPage() {
         {!isCompleted && (
           <button
             className="button button-outline"
-            onClick={saveExerciseNotes}
+            onClick={async () => {
+              const saved = await saveExerciseNotes();
+
+              if (saved) {
+                navigate("/");
+              }
+            }}
             disabled={saving}
           >
             <Save size={17} /> Gem resultater
@@ -735,9 +911,7 @@ export default function SessionDetailPage() {
           <button
             className="button button-primary"
             onClick={completeTraining}
-            disabled={
-              saving || items.length === 0 || completedCount < items.length
-            }
+            disabled={saving || items.length === 0}
           >
             {saving ? (
               <>
@@ -749,12 +923,6 @@ export default function SessionDetailPage() {
               </>
             )}
           </button>
-        )}
-
-        {!isCompleted && completedCount < items.length && (
-          <p className="session-complete-hint">
-            Gennemfør alle {items.length} øvelser, før træningen kan afsluttes.
-          </p>
         )}
 
         {isCompleted && (
@@ -790,17 +958,26 @@ export default function SessionDetailPage() {
         <div className="next-step-card">
           <div>
             <strong>Klar til næste skridt?</strong>
-            <p>
-              Din næste træning kan tage udgangspunkt i, hvad du lærte i dag.
-            </p>
+            <p>Gentag en træning, du kunne lide, eller planlæg en helt ny.</p>
           </div>
 
-          <button
-            className="button button-primary"
-            onClick={() => navigate("/planner")}
-          >
-            Planlæg næste træning
-          </button>
+          <div className="next-step-actions">
+            <button
+              className="button button-outline"
+              onClick={repeatTraining}
+              disabled={saving}
+            >
+              <Repeat2 size={17} />
+              {saving ? "Opretter…" : "Gennemfør igen"}
+            </button>
+
+            <button
+              className="button button-primary"
+              onClick={() => navigate("/planner")}
+            >
+              Planlæg næste træning
+            </button>
+          </div>
         </div>
       )}
     </div>

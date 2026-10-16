@@ -44,7 +44,7 @@ export default function ExercisesPage() {
         supabase
           .from("exercises")
           .select(
-            "id,title,category,description,instructions,duration_minutes,facilities,difficulty,target",
+            "id,title,category,description,instructions,duration_minutes,facilities,difficulty,target,required_equipment",
           )
           .order("category")
           .order("title"),
@@ -319,6 +319,24 @@ export default function ExercisesPage() {
                   <h2>{exercise.title}</h2>
 
                   <p>{exercise.description}</p>
+
+                  <div className="exercise-equipment">
+                    <span className="exercise-equipment-label">UDSTYR</span>
+
+                    <div className="tag-list">
+                      {exercise.required_equipment?.length ? (
+                        exercise.required_equipment.map((equipment) => (
+                          <span className="tag tag-green" key={equipment}>
+                            {equipment}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="exercise-no-equipment">
+                          Ingen ekstra udstyr
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
                   {exercise.target && (
                     <div className="exercise-target">

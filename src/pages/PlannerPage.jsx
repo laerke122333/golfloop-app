@@ -61,6 +61,7 @@ export default function PlannerPage() {
   const [prioritizeLatest, setPrioritizeLatest] = useState(true);
   const [latestReview, setLatestReview] = useState(null);
   const [exercises, setExercises] = useState([]);
+  const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -74,23 +75,35 @@ export default function PlannerPage() {
     async function loadPlannerData() {
       setLoading(true);
 
-      const [exerciseResult, reviewResult] = await Promise.all([
+      const [exerciseResult, reviewResult, favoriteResult] = await Promise.all([
         supabase
           .from("exercises")
           .select(
-            "id,title,category,description,instructions,duration_minutes,facilities,difficulty,target",
+            "id,title,category,description,instructions,duration_minutes,facilities,difficulty,target,required_equipment",
           )
           .order("category")
           .order("title"),
+
         supabase
           .from("round_reviews")
           .select("id,played_at,focus_areas,notes")
           .order("played_at", { ascending: false })
           .limit(1)
           .maybeSingle(),
+
+        supabase
+          .from("exercise_favorites")
+          .select("exercise_id")
+          .eq("user_id", user.id),
       ]);
 
       if (!active) return;
+
+      if (favoriteResult.error) {
+        setError(
+          `Favoritter kunne ikke hentes: ${favoriteResult.error.message}`,
+        );
+      }
 
       if (exerciseResult.error) {
         setError(
@@ -106,7 +119,25 @@ export default function PlannerPage() {
 
       setExercises(exerciseResult.data || []);
       setLatestReview(reviewResult.data || null);
-      setLoading(false);
+
+      setFavoriteIds(
+        new Set(
+          (favoriteResult.data || []).map((favorite) => favorite.exercise_id),
+        ),
+      );
+
+     console.log("FAVORITTER:", favoriteResult.data);
+
+     console.log(
+       "FAVORIT ØVELSER:",
+       (exerciseResult.data || [])
+         .filter((exercise) =>
+           (favoriteResult.data || []).some(
+             (favorite) => favorite.exercise_id === exercise.id,
+           ),
+         )
+         .map((exercise) => `${exercise.category}: ${exercise.title}`),
+     );
     }
 
     if (user) loadPlannerData();
@@ -135,12 +166,28 @@ export default function PlannerPage() {
 
   const exercisesByCategory = useMemo(() => {
     return CATEGORIES.reduce((groups, category) => {
-      groups[category] = exercises.filter(
+      const categoryExercises = exercises.filter(
         (exercise) => exercise.category === category,
       );
+
+      groups[category] = [...categoryExercises].sort((a, b) => {
+        const aIsFavorite = favoriteIds.has(a.id);
+        const bIsFavorite = favoriteIds.has(b.id);
+
+        if (aIsFavorite && !bIsFavorite) {
+          return -1;
+        }
+
+        if (!aIsFavorite && bIsFavorite) {
+          return 1;
+        }
+
+        return a.title.localeCompare(b.title, "da");
+      });
+
       return groups;
     }, {});
-  }, [exercises]);
+  }, [exercises, favoriteIds]);
 
   const chosenIds = plan.map((exercise) => exercise.id);
   const totalPlannedMinutes = plan.reduce(
@@ -319,11 +366,6 @@ export default function PlannerPage() {
       return;
     }
 
-    if (!trainingName.trim()) {
-      setError("Giv træningen et navn, før du gemmer den.");
-      return;
-    }
-
     const sessionMinutes =
       mode === "manual" ? totalPlannedMinutes : Number(minutes);
 
@@ -361,7 +403,7 @@ export default function PlannerPage() {
       .from("training_sessions")
       .insert({
         user_id: user.id,
-        title: trainingName.trim(),
+        title: trainingName.trim() || "Min træning",
         duration_minutes: sessionMinutes,
         focus_areas: sessionFocusAreas,
         // Alle faciliteter antages tilgængelige i GolfLoop.
@@ -575,21 +617,40 @@ export default function PlannerPage() {
                             onClick={() => toggleManualExercise(exercise)}
                             aria-pressed={selected}
                           >
-                            <span
-                              className={`manual-exercise-check ${
-                                selected ? "" : "manual-exercise-check-empty"
-                              }`}
-                            >
-                              {selected && <Check size={15} />}
-                            </span>
                             <span className="manual-exercise-copy">
                               <strong>{exercise.title}</strong>
+
                               <small>
                                 {exercise.duration_minutes} min. ·{" "}
                                 {exercise.target ||
                                   exercise.description ||
                                   "Se øvelsesbeskrivelsen"}
                               </small>
+
+                              <span className="planner-exercise-equipment">
+                                <span className="planner-equipment-label">
+                                  Udstyr
+                                </span>
+
+                                {exercise.required_equipment?.length ? (
+                                  <span className="planner-equipment-list">
+                                    {exercise.required_equipment.map(
+                                      (equipment) => (
+                                        <span
+                                          className="planner-equipment-tag"
+                                          key={equipment}
+                                        >
+                                          {equipment}
+                                        </span>
+                                      ),
+                                    )}
+                                  </span>
+                                ) : (
+                                  <span className="planner-equipment-none">
+                                    Ingen ekstra udstyr
+                                  </span>
+                                )}
+                              </span>
                             </span>
                           </button>
                         );
@@ -686,7 +747,7 @@ export default function PlannerPage() {
                 maxLength={60}
               />
             </div>
-            
+
             <div className="plan-preview-footer">
               <button
                 className="button button-primary button-large panel-full-button"
@@ -999,6 +1060,21 @@ export default function PlannerPage() {
               senere.
             </p>
 
+            <div className="training-name-field">
+              <label htmlFor="training-name">
+                Navngiv din træning <span>(valgfrit)</span>
+              </label>
+
+              <input
+                id="training-name"
+                type="text"
+                value={trainingName}
+                onChange={(event) => setTrainingName(event.target.value)}
+                placeholder="Fx Wedges før turnering"
+                maxLength={60}
+              />
+            </div>
+
             <button
               className="button button-primary button-large panel-full-button"
               disabled={!plan.length || saving}
@@ -1019,16 +1095,12 @@ export default function PlannerPage() {
             </button>
 
             <button
-              className="button button-outline panel-full-button"
-              disabled={!plan.length || saving}
+              type="button"
+              className="button button-outline"
               onClick={() => savePlan(false)}
+              disabled={saving}
             >
-              {saving ? (
-                <LoaderCircle size={17} className="spin" />
-              ) : (
-                <Save size={17} />
-              )}
-              Gem til senere
+              <Save size={17} /> Gem til senere
             </button>
           </div>
         </aside>

@@ -1855,4 +1855,300 @@ code { border-radius: 4px; padding: 2px 4px; color: #405c3b; background: #f0f4eb
 .training-name-field input:focus {
   border-color: #52734d;
   box-shadow: 0 0 0 3px rgba(82, 115, 77, 0.1);
+}.session-status-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 7px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.session-status-planned {
+  color: #687466;
+  background: #eef1e9;
+}
+
+.session-status-in_progress {
+  color: #755f38;
+  background: #f4ead7;
+}
+
+.session-status-completed {
+  color: #39734d;
+  background: #e2f1e7;
+}
+
+.session-repeat-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex-shrink: 0;
+  margin-right: 14px;
+  padding: 9px 12px;
+  border: 1px solid #d8dfd3;
+  border-radius: 10px;
+  background: #fff;
+  color: #52734d;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.session-repeat-button:hover {
+  background: #f3f6ef;
+}
+
+.session-repeat-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.next-step-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}.session-exercise-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.button-secondary {
+  background: #f1f4ed;
+  color: #52734d;
+  border: 1px solid #d8dfd3;
+}
+
+.button-secondary:hover {
+  background: #e7ede2;
+}
+/* =========================================================
+   PROFIL – TRÆNINGSUDSTYR
+========================================================= */
+
+.profile-page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.profile-equipment-panel {
+  margin-top: 28px;
+  padding: 28px;
+  border: 1px solid #dfe5dc;
+  border-radius: 22px;
+  background: #ffffff;
+}
+
+.profile-equipment-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.profile-equipment-heading h2 {
+  margin: 5px 0 7px;
+  color: #26342c;
+  font-size: 24px;
+}
+
+.profile-equipment-heading p {
+  margin: 0;
+  color: #7c877e;
+  font-size: 14px;
+}
+
+.equipment-count {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #eef2ea;
+  color: #52734d;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.equipment-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.equipment-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 17px;
+  border: 1px solid #dfe5dc;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #26342c;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.equipment-option:hover {
+  border-color: #aebcaf;
+  transform: translateY(-1px);
+}
+
+.equipment-option-selected {
+  border-color: #52734d;
+  background: #f2f6ef;
+}
+
+.equipment-option-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #edf2e9;
+  color: #52734d;
+}
+
+.equipment-option-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.equipment-option-copy strong {
+  font-size: 15px;
+}
+
+.equipment-option-copy span {
+  color: #89938b;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.equipment-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 23px;
+  height: 23px;
+  margin-left: auto;
+  border: 1.5px solid #cbd4c8;
+  border-radius: 7px;
+  color: #ffffff;
+}
+
+.equipment-checkbox-selected {
+  border-color: #52734d;
+  background: #52734d;
+}
+
+.profile-equipment-info {
+  margin-top: 18px;
+  padding: 20px 22px;
+  border: 1px solid #e0e8db;
+  border-radius: 18px;
+  background: #f5f8f2;
+}
+
+.profile-equipment-info strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #304237;
+  font-size: 15px;
+}
+
+.profile-equipment-info p {
+  margin: 0;
+  color: #718077;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+@media (max-width: 700px) {
+  .profile-equipment-panel {
+    padding: 20px;
+  }
+
+  .profile-equipment-heading {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .equipment-selection-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.exercise-equipment {
+  margin: 16px 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(82, 115, 77, 0.2);
+  border-radius: 10px;
+  background: rgba(82, 115, 77, 0.05);
+}
+
+.exercise-equipment-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #52734d;
+}
+
+.exercise-no-equipment {
+  font-size: 0.85rem;
+  color: #6b7168;
+}
+.planner-exercise-equipment {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.planner-equipment-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #52734d;
+  margin-right: 2px;
+}
+
+.planner-equipment-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.planner-equipment-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(82, 115, 77, 0.1);
+  color: #52734d;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.planner-equipment-none {
+  font-size: 0.72rem;
+  color: #7a7f77;
 }

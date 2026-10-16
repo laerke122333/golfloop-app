@@ -19,6 +19,7 @@ const navItems = [
   { to: "/planner", label: "Planlæg træning", icon: CalendarDays },
   { to: "/history", label: "Tidligere", icon: History },
   { to: "/round-review", label: "Efter runden", icon: Flag },
+  { to: "/profile", label: "Min profil", icon: Activity },
 ];
 
 export default function AppLayout() {
