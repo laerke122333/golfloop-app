@@ -345,29 +345,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section className="stats-grid" aria-label="Dine tal">
-        <div className="stat-card">
-          <div className="stat-icon stat-icon-green">
-            <CalendarDays size={20} />
-          </div>
-          <div className="stat-label">Træningsplaner</div>
-          <div className="stat-value">{loading ? "—" : sessionCount}</div>
-          <div className="stat-foot">Oprettet i alt</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon stat-icon-sand">
-            <Clock3 size={20} />
-          </div>
-          <div className="stat-label">Planlagt lige nu</div>
-          <div className="stat-value">{loading ? "—" : plannedCount}</div>
-          <div className="stat-foot">Venter på dig</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Seneste evalueringer</div>
-          <div className="stat-value">{loading ? "—" : reviews.length}</div>
-          <div className="stat-foot">Maks. 3 seneste vises</div>
-        </div>
-      </section>
+     
 
       <div className="dashboard-columns">
         <section className="panel-section">

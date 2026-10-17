@@ -21,7 +21,7 @@ const navItems = [
   { to: "/exercises", label: "Øvelser", icon: Target },
   { to: "/history", label: "Tidligere", icon: History },
   { to: "/round-review", label: "Efter runden", icon: Flag },
-  { to: "/profile", label: "Mit udstyr", icon: Activity },
+  { to: "/profile", label: "Profil", icon: Activity },
 ];
 
 export default function AppLayout() {
