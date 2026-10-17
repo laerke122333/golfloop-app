@@ -12,6 +12,7 @@ import {
   Repeat2,
   Save,
   Target,
+  Video,
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../context/AuthContext";
@@ -111,7 +112,20 @@ export default function SessionDetailPage() {
         const { data: exerciseData, error: exerciseError } = await supabase
           .from("training_session_exercises")
           .select(
-            "id,exercise_id,exercise_title,category,description,instructions,duration_minutes,position,completed,result_notes,actual_duration_seconds",
+            `
+      id,
+      exercise_id,
+      exercise_title,
+      category,
+      description,
+      instructions,
+      duration_minutes,
+      position,
+      completed,
+      result_notes,
+      actual_duration_seconds,
+      exercise:exercises(video_id)
+    `,
           )
           .eq("session_id", sessionId)
           .order("position", { ascending: true });
@@ -706,8 +720,16 @@ async function saveAndExit() {
       {activeItem && (
         <section className="active-exercise-panel">
           <div className="eyebrow">AKTIV ØVELSE</div>
+
           <h2>{activeItem.exercise_title}</h2>
+
           <p>{activeItem.description}</p>
+
+          <div className="active-timer">
+            <Clock3 size={20} />
+            <strong>{formatTime(elapsedSeconds)}</strong>
+            <span>brugt på denne øvelse</span>
+          </div>
 
           <div className="active-timer-actions">
             <button
@@ -765,12 +787,25 @@ async function saveAndExit() {
                 </div>
 
                 <div className="session-exercise-title">
-                  <span className="planned-category">
-                    {item.category} · {item.duration_minutes} min.
-                  </span>
-                  <h2>{item.exercise_title}</h2>
-                  <p>{item.description}</p>
-                </div>
+  <span className="planned-category">
+    {item.category} · {item.duration_minutes} min.
+  </span>
+
+  <span className="session-exercise-name">
+    <h2>{item.exercise_title}</h2>
+
+    {item.exercise?.video_id && (
+      <Video
+        size={17}
+        strokeWidth={2}
+        aria-label="Har instruktionsvideo"
+        title="Har instruktionsvideo"
+      />
+    )}
+  </span>
+
+  <p>{item.description}</p>
+</div>
 
                 <div className="completed-checkbox">
                   {item.completed ? (
@@ -851,6 +886,22 @@ async function saveAndExit() {
               {item.instructions?.length > 0 && (
                 <details className="session-instructions">
                   <summary>Vis øvelsen trin for trin</summary>
+
+                  {item.exercise?.video_id && (
+                    <div className="session-exercise-video">
+                      <h3>Se øvelsen</h3>
+
+                      <div className="session-exercise-video-frame">
+                        <iframe
+                          src={`https://www.youtube-nocookie.com/embed/${item.exercise.video_id}`}
+                          title={`Instruktionsvideo til ${item.exercise_title}`}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   <ol>
                     {item.instructions.map((step, stepIndex) => (
                       <li key={`${item.id}-${stepIndex}`}>{step}</li>

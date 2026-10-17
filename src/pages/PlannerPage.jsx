@@ -14,6 +14,7 @@ import {
   Save,
   Sparkles,
   Trash2,
+  Video,
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../context/AuthContext";
@@ -80,7 +81,7 @@ export default function PlannerPage() {
         supabase
           .from("exercises")
           .select(
-            "id,title,category,description,instructions,duration_minutes,facilities,difficulty,target,required_equipment",
+            "id,title,category,description,instructions,duration_minutes,facilities,difficulty,target,required_equipment,video_id",
           )
           .order("category")
           .order("title"),
@@ -622,7 +623,18 @@ export default function PlannerPage() {
                           >
                             <span className="manual-exercise-copy">
                               <span className="manual-exercise-title-row">
-                                <strong>{exercise.title}</strong>
+                                <span className="manual-exercise-title">
+                                  <strong>{exercise.title}</strong>
+
+                                  {exercise.video_id && (
+                                    <span
+                                      className="video-indicator"
+                                      title="Har instruktionsvideo"
+                                    >
+                                      <Video size={14} strokeWidth={2} />
+                                    </span>
+                                  )}
+                                </span>
 
                                 {favoriteIds.has(exercise.id) && (
                                   <span className="manual-exercise-favorite">

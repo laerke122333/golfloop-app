@@ -6,6 +6,7 @@ import {
   Heart,
   Search,
   Target,
+  Video,
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../context/AuthContext";
@@ -44,7 +45,7 @@ export default function ExercisesPage() {
         supabase
           .from("exercises")
           .select(
-            "id,title,category,description,instructions,duration_minutes,facilities,difficulty,target,required_equipment",
+            "id,title,category,description,instructions,duration_minutes,facilities,difficulty,target,video_id",
           )
           .order("category")
           .order("title"),
@@ -272,28 +273,50 @@ export default function ExercisesPage() {
                     {exercise.category}
                   </span>
 
-                  <button
-                    type="button"
-                    className={`exercise-favorite-button ${
-                      isFavorite ? "exercise-favorite-button-active" : ""
-                    }`}
-                    onClick={() => toggleFavorite(exercise.id)}
-                    aria-label={
-                      isFavorite
-                        ? `Fjern ${exercise.title} fra favoritter`
-                        : `Gem ${exercise.title} som favorit`
-                    }
-                    aria-pressed={isFavorite}
-                    title={
-                      isFavorite ? "Fjern fra favoritter" : "Gem som favorit"
-                    }
-                  >
-                    <Heart
-                      size={19}
-                      fill={isFavorite ? "currentColor" : "none"}
-                      strokeWidth={2}
-                    />
-                  </button>
+                  {exercise.video_id && (
+                    <span
+                      className="exercise-video-indicator"
+                      title="Denne øvelse har en instruktionsvideo"
+                      aria-label="Denne øvelse har en instruktionsvideo"
+                    >
+                      <Video size={18} strokeWidth={2} />
+                    </span>
+                  )}
+
+                  <div className="exercise-card-actions">
+                    {exercise.video_id && (
+                      <span
+                        className="exercise-video-indicator"
+                        title="Har instruktionsvideo"
+                        aria-label="Har instruktionsvideo"
+                      >
+                        <Video size={17} strokeWidth={2} />
+                      </span>
+                    )}
+
+                    <button
+                      type="button"
+                      className={`exercise-favorite-button ${
+                        isFavorite ? "exercise-favorite-button-active" : ""
+                      }`}
+                      onClick={() => toggleFavorite(exercise.id)}
+                      aria-label={
+                        isFavorite
+                          ? `Fjern ${exercise.title} fra favoritter`
+                          : `Gem ${exercise.title} som favorit`
+                      }
+                      aria-pressed={isFavorite}
+                      title={
+                        isFavorite ? "Fjern fra favoritter" : "Gem som favorit"
+                      }
+                    >
+                      <Heart
+                        size={19}
+                        fill={isFavorite ? "currentColor" : "none"}
+                        strokeWidth={2}
+                      />
+                    </button>
+                  </div>
 
                   <div className="exercise-art-orbit orbit-one" />
                   <div className="exercise-art-orbit orbit-two" />
@@ -360,6 +383,22 @@ export default function ExercisesPage() {
 
                   {expanded && (
                     <div className="exercise-instructions">
+                      {exercise.video_id && (
+                        <div className="exercise-video">
+                          <h3>Se øvelsen</h3>
+
+                          <div className="exercise-video-frame">
+                            <iframe
+                              src={`https://www.youtube-nocookie.com/embed/${exercise.video_id}`}
+                              title={`Instruktionsvideo til ${exercise.title}`}
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                              referrerPolicy="strict-origin-when-cross-origin"
+                              allowFullScreen
+                            />
+                          </div>
+                        </div>
+                      )}
+
                       <h3>Sådan gør du</h3>
 
                       <ol>

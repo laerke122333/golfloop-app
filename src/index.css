@@ -2171,3 +2171,76 @@ code { border-radius: 4px; padding: 2px 4px; color: #405c3b; background: #f0f4eb
   font-weight: 700;
   line-height: 1;
 }
+.manual-exercise-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.manual-exercise-title svg {
+  color: #52734d;
+  flex-shrink: 0;
+}
+.session-exercise-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.session-exercise-name svg {
+  color: #52734d;
+  flex-shrink: 0;
+}
+
+.manual-exercise-title,
+.session-exercise-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.manual-exercise-title h2,
+.session-exercise-name h2 {
+  margin: 0;
+}
+
+.video-indicator {
+  width: 27px;
+  height: 27px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: rgba(82, 115, 77, 0.1);
+  color: #52734d;
+  border: 1px solid rgba(82, 115, 77, 0.16);
+}
+.exercise-card-actions {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 5;
+}
+
+.exercise-card-actions .exercise-favorite-button {
+  position: static;
+}
+
+.exercise-video-indicator {
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: #52734d;
+}
+
+.exercise-video-indicator svg {
+  display: block;
+}
