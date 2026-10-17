@@ -3985,3 +3985,157 @@ code { border-radius: 4px; padding: 2px 4px; color: #405c3b; background: #f0f4eb
     min-width: 42px;
   }
 }
+/* =========================================================
+   GOLFLOOP — DAGENS CHALLENGE / PREMIUM LOOK
+   ========================================================= */
+
+.daily-challenge-section {
+  margin-bottom: 30px;
+}
+
+.daily-challenge-card {
+  min-height: 285px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 27px 29px;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Lille label øverst */
+
+.daily-challenge-top {
+  margin-bottom: 0;
+}
+
+.daily-challenge-top .challenge-pill {
+  background: rgba(255, 255, 255, 0.11);
+  border-color: rgba(255, 255, 255, 0.18);
+  letter-spacing: 0.11em;
+}
+
+/* Ikonet */
+
+.daily-challenge-top svg {
+  width: 23px;
+  height: 23px;
+  opacity: 0.8;
+}
+
+/* Selve titlen */
+
+.daily-challenge-card h3 {
+  max-width: 600px;
+  margin-top: auto;
+  margin-bottom: 9px;
+  font-size: clamp(30px, 4.5vw, 46px);
+}
+
+/* Beskrivelsen */
+
+.daily-challenge-card p {
+  max-width: 520px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Nederste linje */
+
+.daily-challenge-footer {
+  align-items: center;
+  margin-top: 0;
+  padding-top: 17px;
+}
+
+/* Øvelsesinfo */
+
+.daily-challenge-footer > span:first-child {
+  max-width: 65%;
+  color: rgba(255, 255, 255, 0.62);
+  line-height: 1.4;
+}
+
+/* START-knappen */
+
+.daily-challenge-footer .challenge-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 17px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1d4938;
+  font-size: 12px;
+  font-weight: 800;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.daily-challenge-card:hover
+.daily-challenge-footer .challenge-arrow {
+  transform: translateX(3px);
+  background: #f3f6ef;
+}
+
+/* Gør hele kortet mere levende */
+
+.daily-challenge-card::before {
+  content: "";
+  position: absolute;
+  top: -90px;
+  right: -70px;
+  width: 240px;
+  height: 240px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------
+   COMPLETED
+   --------------------------------------------------------- */
+
+.daily-completed-badge {
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------
+   MOBILE
+   --------------------------------------------------------- */
+
+@media (max-width: 700px) {
+  .daily-challenge-card {
+    min-height: 270px;
+    padding: 22px;
+    border-radius: 22px;
+  }
+
+  .daily-challenge-card h3 {
+    margin-top: 42px;
+    font-size: 30px;
+  }
+
+  .daily-challenge-card p {
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+
+  .daily-challenge-footer {
+    align-items: center;
+  }
+
+  .daily-challenge-footer > span:first-child {
+    max-width: 55%;
+    font-size: 10px;
+  }
+
+  .daily-challenge-footer .challenge-arrow {
+    min-height: 39px;
+    padding: 9px 14px;
+    font-size: 11px;
+  }
+}

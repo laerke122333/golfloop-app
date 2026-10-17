@@ -19,6 +19,7 @@ const navItems = [
   { to: "/", label: "Overblik", icon: Activity, end: true },
   { to: "/planner", label: "Planlæg træning", icon: CalendarDays },
   { to: "/exercises", label: "Øvelser", icon: Target },
+  { to: "/challenges", label: "Challenges", icon: Trophy },
   { to: "/history", label: "Tidligere", icon: History },
   { to: "/round-review", label: "Efter runden", icon: Flag },
   { to: "/profile", label: "Profil", icon: Activity },
