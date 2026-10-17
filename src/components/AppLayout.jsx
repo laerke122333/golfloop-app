@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   Activity,
@@ -7,12 +7,12 @@ import {
   History,
   LogOut,
   Menu,
-  PlusCircle,
+  UserCircle,
   Sparkles,
   Target,
   X,
+  Trophy,
 } from "lucide-react";
-import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
 const navItems = [
@@ -24,18 +24,28 @@ const navItems = [
   { to: "/profile", label: "Profil", icon: Activity },
 ];
 
+const mobileBottomItems = [
+  { to: "/", label: "Overblik", icon: Activity, end: true },
+  { to: "/planner", label: "Træning", icon: CalendarDays },
+  { to: "/challenges", label: "Challenges", icon: Trophy },
+  { to: "/round-review", label: "Runden", icon: Flag },
+];
+
 export default function AppLayout() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [signOutError, setSignOutError] = useState("");
 
   async function handleSignOut() {
     const { error } = await signOut();
+
     if (error) {
       setSignOutError(error.message || "Du kunne ikke logges ud.");
       return;
     }
+
     navigate("/login");
   }
 
@@ -45,6 +55,7 @@ export default function AppLayout() {
 
   return (
     <div className="app-shell">
+      {/* Overlay når sidemenuen er åben */}
       {mobileOpen && (
         <button
           className="mobile-overlay"
@@ -52,17 +63,23 @@ export default function AppLayout() {
           onClick={closeMobile}
         />
       )}
+
+      {/* SIDEMENU */}
       <aside className={`sidebar ${mobileOpen ? "sidebar-open" : ""}`}>
+        {/* Logo */}
         <div className="brand-lockup">
           <div className="brand-mark">
             <Flag size={22} strokeWidth={2.2} />
           </div>
+
           <div>
             <div className="brand-name">
               GolfLoop<span>.</span>
             </div>
+
             <div className="brand-tagline">Train with purpose</div>
           </div>
+
           <button
             className="icon-button sidebar-close"
             onClick={closeMobile}
@@ -73,6 +90,8 @@ export default function AppLayout() {
         </div>
 
         <div className="sidebar-caption">DIT GOLFUNIVERS</div>
+
+        {/* HOVEDMENU */}
         <nav className="side-nav" aria-label="Hovednavigation">
           {navItems.map(({ to, label, icon: Icon, end }) => (
             <NavLink
@@ -85,19 +104,24 @@ export default function AppLayout() {
               onClick={closeMobile}
             >
               <Icon size={19} strokeWidth={1.9} />
+
               <span>{label}</span>
             </NavLink>
           ))}
         </nav>
 
+        {/* TIP */}
         <div className="sidebar-tip">
           <div className="tip-icon">
             <Sparkles size={18} />
           </div>
+
           <p className="tip-title">Små fremskridt tæller</p>
+
           <p className="tip-copy">
             Målrettet træning begynder med ét fokusområde.
           </p>
+
           <button
             onClick={() => {
               navigate("/planner");
@@ -109,14 +133,18 @@ export default function AppLayout() {
           </button>
         </div>
 
+        {/* PROFIL / LOG UD */}
         <div className="sidebar-bottom">
           <div className="avatar">
             {(user?.email?.[0] || "G").toUpperCase()}
           </div>
+
           <div className="user-meta">
             <strong>Min profil</strong>
+
             <span title={user?.email}>{user?.email || "Golfspiller"}</span>
           </div>
+
           <button
             className="icon-button logout-icon"
             onClick={handleSignOut}
@@ -126,10 +154,13 @@ export default function AppLayout() {
             <LogOut size={18} />
           </button>
         </div>
+
         {signOutError && <p className="sidebar-error">{signOutError}</p>}
       </aside>
 
+      {/* HOVEDOMRÅDE */}
       <main className="main-area">
+        {/* MOBIL HEADER */}
         <header className="mobile-header">
           <button
             className="icon-button mobile-menu-button"
@@ -138,48 +169,45 @@ export default function AppLayout() {
           >
             <Menu size={22} />
           </button>
+
           <div className="mobile-brand">
-            <Flag size={19} /> GolfLoop<span>.</span>
+            <Flag size={19} />
+            GolfLoop<span>.</span>
           </div>
+
           <button
             className="quick-add"
-            onClick={() => navigate("/round-review")}
-            aria-label="Registrer golfrunde"
+            onClick={() => navigate("/profile")}
+            aria-label="Åbn profil"
           >
-            <PlusCircle size={21} />
+            <UserCircle size={21} />
           </button>
         </header>
+
+        {/* SIDENS INDHOLD */}
         <div className="page-container">
           <Outlet />
         </div>
       </main>
 
+      {/* MOBIL BUNDMENU */}
       <nav className="mobile-bottom-nav" aria-label="Mobil navigation">
-        {navItems
-          .filter(({ to }) =>
-            ["/", "/planner", "/history", "/round-review"].includes(to),
-          )
-          .map(({ to, label, icon: Icon, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                `mobile-bottom-nav-item ${
-                  isActive ? "mobile-bottom-nav-item-active" : ""
-                }`
-              }
-            >
-              <Icon size={21} strokeWidth={1.9} />
+        {mobileBottomItems.map(({ to, label, icon: Icon, end }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            className={({ isActive }) =>
+              `mobile-bottom-nav-item ${
+                isActive ? "mobile-bottom-nav-item-active" : ""
+              }`
+            }
+          >
+            <Icon size={21} strokeWidth={1.9} />
 
-              <span>
-                {to === "/" && "Overblik"}
-                {to === "/planner" && "Træning"}
-                {to === "/history" && "Tidligere"}
-                {to === "/round-review" && "Runden"}
-              </span>
-            </NavLink>
-          ))}
+            <span>{label}</span>
+          </NavLink>
+        ))}
       </nav>
     </div>
   );

@@ -8,6 +8,7 @@ import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import PlannerPage from "./pages/PlannerPage";
 import ExercisesPage from "./pages/ExercisesPage";
+import ChallengesPage from "./pages/ChallengesPage";
 import RoundReviewPage from "./pages/RoundReviewPage";
 import SessionDetailPage from "./pages/SessionDetailPage";
 import HistoryPage from "./pages/HistoryPage";
@@ -110,6 +111,7 @@ export default function App() {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/planner" element={<PlannerPage />} />
           <Route path="/exercises" element={<ExercisesPage />} />
+          <Route path="/challenges" element={<ChallengesPage />} />
           <Route path="/round-review" element={<RoundReviewPage />} />
           <Route path="/sessions/:sessionId" element={<SessionDetailPage />} />
           <Route path="/history" element={<HistoryPage />} />

@@ -46,6 +46,12 @@ export default function SessionDetailPage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
+  const [resultModalOpen, setResultModalOpen] = useState(false);
+  const [resultItemId, setResultItemId] = useState(null);
+  const [resultFeeling, setResultFeeling] = useState("okay");
+  const [resultScore, setResultScore] = useState("");
+  const [resultTotal, setResultTotal] = useState("10");
+
   const [activeItemId, setActiveItemId] = useState(null);
   const [timerRunning, setTimerRunning] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -54,7 +60,6 @@ export default function SessionDetailPage() {
   const baseElapsedRef = useRef(0);
   const activeItemIdRef = useRef(null);
   const itemsRef = useRef([]);
-  
 
   useEffect(() => {
     activeItemIdRef.current = activeItemId;
@@ -123,8 +128,10 @@ export default function SessionDetailPage() {
       position,
       completed,
       result_notes,
-      actual_duration_seconds,
-      exercise:exercises(video_id)
+      result_feeling,
+      result_score,
+      result_total,
+      actual_duration_seconds
     `,
           )
           .eq("session_id", sessionId)
@@ -303,11 +310,11 @@ export default function SessionDetailPage() {
       timerStartedAtRef.current = null;
       baseElapsedRef.current = finalSeconds;
 
+      // Gem tiden, men vent med at markere øvelsen som færdig.
       const { error: updateError } = await supabase
         .from("training_session_exercises")
         .update({
           actual_duration_seconds: finalSeconds,
-          completed: true,
         })
         .eq("id", activeItem.id);
 
@@ -317,7 +324,6 @@ export default function SessionDetailPage() {
         item.id === activeItem.id
           ? {
               ...item,
-              completed: true,
               actual_duration_seconds: finalSeconds,
             }
           : item,
@@ -326,7 +332,87 @@ export default function SessionDetailPage() {
       itemsRef.current = nextItems;
       setItems(nextItems);
 
-      const finishedTitle = activeItem.exercise_title;
+      // Åbn resultatvinduet
+      setResultItemId(activeItem.id);
+      setResultFeeling(activeItem.result_feeling || "okay");
+      setResultScore(
+        activeItem.result_score !== null &&
+          activeItem.result_score !== undefined
+          ? String(activeItem.result_score)
+          : "",
+      );
+      setResultTotal(
+        activeItem.result_total ? String(activeItem.result_total) : "10",
+      );
+
+      setResultModalOpen(true);
+    } catch (finishError) {
+      setError(`Øvelsen kunne ikke afsluttes: ${finishError.message}`);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveExerciseResult() {
+    if (!resultItemId) return;
+
+    const currentItem = itemsRef.current.find(
+      (item) => item.id === resultItemId,
+    );
+
+    if (!currentItem) return;
+
+    const total = Math.max(1, Math.floor(Number(resultTotal) || 10));
+
+    const score = resultScore === "" ? null : Math.floor(Number(resultScore));
+
+    if (
+      score !== null &&
+      (!Number.isFinite(score) || score < 0 || score > total)
+    ) {
+      setError(`Resultatet skal være mellem 0 og ${total}.`);
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+
+    try {
+      const { error: updateError } = await supabase
+        .from("training_session_exercises")
+        .update({
+          completed: true,
+          result_feeling: resultFeeling,
+          result_score: score,
+          result_total: score === null ? null : total,
+          actual_duration_seconds: Number(
+            currentItem.actual_duration_seconds || 0,
+          ),
+        })
+        .eq("id", resultItemId);
+
+      if (updateError) throw updateError;
+
+      const nextItems = itemsRef.current.map((item) =>
+        item.id === resultItemId
+          ? {
+              ...item,
+              completed: true,
+              result_feeling: resultFeeling,
+              result_score: score,
+              result_total: score === null ? null : total,
+            }
+          : item,
+      );
+
+      itemsRef.current = nextItems;
+      setItems(nextItems);
+
+      const finishedTitle = currentItem.exercise_title;
+      const finalSeconds = Number(currentItem.actual_duration_seconds || 0);
+
+      setResultModalOpen(false);
+      setResultItemId(null);
 
       setActiveItemId(null);
       activeItemIdRef.current = null;
@@ -334,17 +420,14 @@ export default function SessionDetailPage() {
       baseElapsedRef.current = 0;
 
       setNotice(
-        `${finishedTitle} er færdig. Du brugte ${formatLongTime(
-          finalSeconds,
-        )}.`,
+        `${finishedTitle} er færdig. Du brugte ${formatLongTime(finalSeconds)}.`,
       );
-    } catch (finishError) {
-      setError(`Øvelsen kunne ikke gemmes som færdig: ${finishError.message}`);
+    } catch (resultError) {
+      setError(`Resultatet kunne ikke gemmes: ${resultError.message}`);
     } finally {
       setSaving(false);
     }
   }
-
   // Færdiggør en øvelse uden timer
   async function completeExerciseWithoutTimer(itemId) {
     if (isCompleted) return;
@@ -406,34 +489,31 @@ export default function SessionDetailPage() {
 
     setSaving(true);
     setError("");
-async function saveAndExit() {
-  const saved = await saveExerciseNotes();
 
-  if (!saved) return;
-
-  // Hvis træningen var startet, gem den som "planlagt/gemt"
-  const { error: statusError } = await supabase
-    .from("training_sessions")
-    .update({
-      status: "planned",
-    })
-    .eq("id", session.id)
-    .eq("user_id", user.id);
-
-  if (statusError) {
-    setError(`Træningen kunne ikke gemmes: ${statusError.message}`);
-    return;
-  }
-
-  navigate("/");
-}
     try {
       for (const item of itemsRef.current) {
+        const score =
+          item.result_score === "" ||
+          item.result_score === null ||
+          item.result_score === undefined
+            ? null
+            : Number(item.result_score);
+
+        const total =
+          item.result_total === "" ||
+          item.result_total === null ||
+          item.result_total === undefined
+            ? null
+            : Number(item.result_total);
+
         const { error: updateError } = await supabase
           .from("training_session_exercises")
           .update({
             completed: item.completed,
             result_notes: item.result_notes || null,
+            result_feeling: item.result_feeling || null,
+            result_score: score,
+            result_total: total,
             actual_duration_seconds: Number(item.actual_duration_seconds || 0),
           })
           .eq("id", item.id);
@@ -452,85 +532,80 @@ async function saveAndExit() {
   }
 
   async function completeTraining() {
-  if (!session || completedCount !== items.length || items.length === 0) {
-    return;
-  }
+    if (!session || completedCount !== items.length || items.length === 0) {
+      return;
+    }
 
-  const allSaved = await saveExerciseNotes();
-  if (!allSaved) return;
+    const allSaved = await saveExerciseNotes();
+    if (!allSaved) return;
 
-  setSaving(true);
-  setError("");
+    setSaving(true);
+    setError("");
 
-  async function saveAndGoHome() {
-    const saved = await saveExerciseNotes();
+    async function saveAndGoHome() {
+      const saved = await saveExerciseNotes();
 
-    if (saved) {
+      if (saved) {
+        navigate("/");
+      }
+    }
+    try {
+      const { data, error: updateError } = await supabase
+        .from("training_sessions")
+        .update({
+          status: "completed",
+          completed_at: new Date().toISOString(),
+        })
+        .eq("id", session.id)
+        .eq("user_id", user.id)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
+      setSession((current) => ({
+        ...current,
+        ...data,
+      }));
+
+      setActiveItemId(null);
+      activeItemIdRef.current = null;
+      setTimerRunning(false);
+      timerStartedAtRef.current = null;
+
+      setNotice("Flot arbejde! Træningen er markeret som gennemført.");
+
       navigate("/");
+    } catch (completeError) {
+      setError(`Træningen kunne ikke afsluttes: ${completeError.message}`);
+    } finally {
+      setSaving(false);
     }
   }
-  try {
-    const { data, error: updateError } = await supabase
-      .from("training_sessions")
-      .update({
-        status: "completed",
-        completed_at: new Date().toISOString(),
-      })
-      .eq("id", session.id)
-      .eq("user_id", user.id)
-      .select()
-      .single();
 
-    if (updateError) throw updateError;
+  async function repeatTraining() {
+    setSaving(true);
+    setError("");
+    setNotice("");
 
-    setSession((current) => ({
-      ...current,
-      ...data,
-    }));
-
-    setActiveItemId(null);
-    activeItemIdRef.current = null;
-    setTimerRunning(false);
-    timerStartedAtRef.current = null;
-
-    setNotice("Flot arbejde! Træningen er markeret som gennemført.");
-
-    navigate("/");
-  } catch (completeError) {
-    setError(
-      `Træningen kunne ikke afsluttes: ${completeError.message}`
-    );
-  } finally {
-    setSaving(false);
-  }
-}
-
-    async function repeatTraining() {
-  setSaving(true);
-  setError("");
-  setNotice("");
-  
-
-  try {
-    const { data: originalExercises, error: exercisesError } =
-      await supabase
+    try {
+      const { data: originalExercises, error: exercisesError } = await supabase
         .from("training_session_exercises")
         .select(
-          "exercise_id,exercise_title,category,description,instructions,duration_minutes,position"
+          "exercise_id,exercise_title,category,description,instructions,duration_minutes,position",
         )
         .eq("session_id", session.id)
         .order("position", { ascending: true });
 
-    if (exercisesError) {
-      throw exercisesError;
-    }
+      if (exercisesError) {
+        throw exercisesError;
+      }
 
-    if (!originalExercises?.length) {
-      throw new Error("Denne træning indeholder ingen øvelser.");
-    }
+      if (!originalExercises?.length) {
+        throw new Error("Denne træning indeholder ingen øvelser.");
+      }
 
-    const { data: newSession, error: sessionError } =
-      await supabase
+      const { data: newSession, error: sessionError } = await supabase
         .from("training_sessions")
         .insert({
           user_id: user.id,
@@ -538,63 +613,54 @@ async function saveAndExit() {
           duration_minutes: session.duration_minutes,
           focus_areas: session.focus_areas || [],
           facility: session.facility || "Flere faciliteter",
-          prioritize_recent_round: Boolean(
-            session.prioritize_recent_round
-          ),
+          prioritize_recent_round: Boolean(session.prioritize_recent_round),
           status: "planned",
         })
         .select()
         .single();
 
-    if (sessionError) {
-      throw sessionError;
-    }
+      if (sessionError) {
+        throw sessionError;
+      }
 
-    const newExercises = originalExercises.map((exercise, index) => ({
-      session_id: newSession.id,
-      exercise_id: exercise.exercise_id,
-      exercise_title: exercise.exercise_title,
-      category: exercise.category,
-      description: exercise.description,
-      instructions: exercise.instructions || [],
-      duration_minutes: Number(exercise.duration_minutes),
-      position: index,
-      completed: false,
-      result_notes: null,
-      actual_duration_seconds: 0,
-    }));
+      const newExercises = originalExercises.map((exercise, index) => ({
+        session_id: newSession.id,
+        exercise_id: exercise.exercise_id,
+        exercise_title: exercise.exercise_title,
+        category: exercise.category,
+        description: exercise.description,
+        instructions: exercise.instructions || [],
+        duration_minutes: Number(exercise.duration_minutes),
+        position: index,
+        completed: false,
+        result_notes: null,
+        actual_duration_seconds: 0,
+      }));
 
-    const { error: insertError } =
-      await supabase
+      const { error: insertError } = await supabase
         .from("training_session_exercises")
         .insert(newExercises);
 
-    if (insertError) {
-      await supabase
-        .from("training_sessions")
-        .delete()
-        .eq("id", newSession.id)
-        .eq("user_id", user.id);
+      if (insertError) {
+        await supabase
+          .from("training_sessions")
+          .delete()
+          .eq("id", newSession.id)
+          .eq("user_id", user.id);
 
-      throw insertError;
+        throw insertError;
+      }
+
+      navigate(`/sessions/${newSession.id}`);
+    } catch (repeatError) {
+      console.error("Fejl ved gentagelse af træning:", repeatError);
+
+      setError(`Træningen kunne ikke gentages: ${repeatError.message}`);
+    } finally {
+      setSaving(false);
     }
-
-    navigate(`/sessions/${newSession.id}`);
-  } catch (repeatError) {
-    console.error(
-      "Fejl ved gentagelse af træning:",
-      repeatError
-    );
-
-    setError(
-      `Træningen kunne ikke gentages: ${repeatError.message}`
-    );
-  } finally {
-    setSaving(false);
   }
-}
 
-   
   // Opdater den synlige timer 4 gange i sekundet.
   useEffect(() => {
     if (!timerRunning) return undefined;
@@ -787,25 +853,25 @@ async function saveAndExit() {
                 </div>
 
                 <div className="session-exercise-title">
-  <span className="planned-category">
-    {item.category} · {item.duration_minutes} min.
-  </span>
+                  <span className="planned-category">
+                    {item.category} · {item.duration_minutes} min.
+                  </span>
 
-  <span className="session-exercise-name">
-    <h2>{item.exercise_title}</h2>
+                  <span className="session-exercise-name">
+                    <h2>{item.exercise_title}</h2>
 
-    {item.exercise?.video_id && (
-      <Video
-        size={17}
-        strokeWidth={2}
-        aria-label="Har instruktionsvideo"
-        title="Har instruktionsvideo"
-      />
-    )}
-  </span>
+                    {item.exercise?.video_id && (
+                      <Video
+                        size={17}
+                        strokeWidth={2}
+                        aria-label="Har instruktionsvideo"
+                        title="Har instruktionsvideo"
+                      />
+                    )}
+                  </span>
 
-  <p>{item.description}</p>
-</div>
+                  <p>{item.description}</p>
+                </div>
 
                 <div className="completed-checkbox">
                   {item.completed ? (
@@ -1028,6 +1094,125 @@ async function saveAndExit() {
             >
               Planlæg næste træning
             </button>
+          </div>
+        </div>
+      )}
+
+      {resultModalOpen && (
+        <div
+          className="result-modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="result-modal-title"
+        >
+          <div className="result-modal">
+            <div className="result-modal-eyebrow">ØVELSE FÆRDIG</div>
+
+            <h2 id="result-modal-title">Hvordan gik det?</h2>
+
+            <p className="result-modal-exercise">
+              {items.find((item) => item.id === resultItemId)?.exercise_title}
+            </p>
+
+            <div className="result-feeling-grid">
+              <button
+                type="button"
+                className={`result-feeling-button ${
+                  resultFeeling === "easy" ? "selected" : ""
+                }`}
+                onClick={() => setResultFeeling("easy")}
+              >
+                <span>😊</span>
+                <strong>Nem</strong>
+              </button>
+
+              <button
+                type="button"
+                className={`result-feeling-button ${
+                  resultFeeling === "okay" ? "selected" : ""
+                }`}
+                onClick={() => setResultFeeling("okay")}
+              >
+                <span>😐</span>
+                <strong>Okay</strong>
+              </button>
+
+              <button
+                type="button"
+                className={`result-feeling-button ${
+                  resultFeeling === "hard" ? "selected" : ""
+                }`}
+                onClick={() => setResultFeeling("hard")}
+              >
+                <span>😕</span>
+                <strong>Svær</strong>
+              </button>
+            </div>
+
+            <div className="result-score-section">
+              <label className="field-label">
+                Hvor mange ramte du?
+                <span className="optional-label">Valgfrit</span>
+              </label>
+
+              <div className="result-score-inputs">
+                <input
+                  type="number"
+                  min="0"
+                  max={resultTotal}
+                  value={resultScore}
+                  onChange={(event) => setResultScore(event.target.value)}
+                  placeholder="7"
+                />
+
+                <span>/</span>
+
+                <input
+                  type="number"
+                  min="1"
+                  value={resultTotal}
+                  onChange={(event) => setResultTotal(event.target.value)}
+                />
+              </div>
+
+              <p className="result-score-help">
+                Du kan springe scoren over, hvis øvelsen ikke passer til en
+                bestemt score.
+              </p>
+            </div>
+
+            <div className="result-modal-actions">
+              <button
+                type="button"
+                className="button button-outline"
+                onClick={() => {
+                  setResultModalOpen(false);
+                  setResultItemId(null);
+                }}
+                disabled={saving}
+              >
+                Tilbage
+              </button>
+
+              <button
+                type="button"
+                className="button button-primary"
+                onClick={saveExerciseResult}
+                disabled={saving}
+              >
+                {saving ? (
+                  <>
+                    <LoaderCircle size={17} className="spin" />
+                    Gemmer…
+                  </>
+                ) : (
+                  <>
+                    <Check size={17} />
+                    Gem resultat
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
