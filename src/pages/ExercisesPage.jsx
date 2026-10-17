@@ -18,6 +18,7 @@ const categories = [
   "Putting",
   "Driver",
   "Bunker",
+  "Videoguide",
 ];
 
 export default function ExercisesPage() {
@@ -139,7 +140,11 @@ export default function ExercisesPage() {
     () =>
       exercises.filter((exercise) => {
         const matchesCategory =
-          category === "Alle" || exercise.category === category;
+          category === "Alle"
+            ? true
+            : category === "Videoguide"
+              ? Boolean(exercise.video_id)
+              : exercise.category === category;
 
         const matchesFavorite = !showFavorites || favoriteIds.has(exercise.id);
 
@@ -164,7 +169,11 @@ export default function ExercisesPage() {
           item,
           item === "Alle"
             ? exercises.length
-            : exercises.filter((exercise) => exercise.category === item).length,
+            : item === "Videoguide"
+              ? exercises.filter((exercise) => Boolean(exercise.video_id))
+                  .length
+              : exercises.filter((exercise) => exercise.category === item)
+                  .length,
         ]),
       ),
     [exercises],
@@ -239,6 +248,8 @@ export default function ExercisesPage() {
             }`}
             onClick={() => setCategory(item)}
           >
+           
+            {item === "Videoguide" && <Video size={14} />}
             {item}
             <span>{categoryCounts[item] || 0}</span>
           </button>

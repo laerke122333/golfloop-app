@@ -2244,3 +2244,13 @@ code { border-radius: 4px; padding: 2px 4px; color: #405c3b; background: #f0f4eb
 .exercise-video-indicator svg {
   display: block;
 }
+.manual-category-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.manual-category-title svg {
+  color: #52734d;
+  flex-shrink: 0;
+}

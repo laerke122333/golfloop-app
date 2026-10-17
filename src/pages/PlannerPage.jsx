@@ -22,6 +22,7 @@ import { useAuth } from "../context/AuthContext";
 // UI-rækkefølgen er bevidst: Driver, Jernslag, Putts, Wedges / Short Game, Bunker.
 // I databasen hedder Putting stadig "Putting" og Wedges stadig "Wedges".
 const CATEGORIES = ["Driver", "Jernslag", "Putting", "Wedges", "Bunker"];
+const MANUAL_CATEGORIES = [...CATEGORIES, "Videoguide"];
 const TIME_OPTIONS = [15, 30, 45, 60, 90];
 
 const CATEGORY_LABELS = {
@@ -30,6 +31,7 @@ const CATEGORY_LABELS = {
   Putting: "Putts",
   Wedges: "Wedges / Short Game",
   Bunker: "Bunker",
+  Videoguide: "Videoguide",
 };
 
 const CATEGORY_DESCRIPTIONS = {
@@ -38,6 +40,7 @@ const CATEGORY_DESCRIPTIONS = {
   Putting: "Afstand og korte putts",
   Wedges: "Indspil og længdekontrol",
   Bunker: "Teknik og kontrol",
+  Videoguide: "Øvelser med instruktionsvideo",
 };
 
 function allocateMinutes(total, count) {
@@ -169,10 +172,11 @@ export default function PlannerPage() {
   );
 
   const exercisesByCategory = useMemo(() => {
-    return CATEGORIES.reduce((groups, category) => {
-      const categoryExercises = exercises.filter(
-        (exercise) => exercise.category === category,
-      );
+    return MANUAL_CATEGORIES.reduce((groups, category) => {
+      const categoryExercises =
+        category === "Videoguide"
+          ? exercises.filter((exercise) => Boolean(exercise.video_id))
+          : exercises.filter((exercise) => exercise.category === category);
 
       groups[category] = [...categoryExercises].sort((a, b) => {
         const aIsFavorite = favoriteIds.has(a.id);
@@ -564,7 +568,7 @@ export default function PlannerPage() {
 
         <div className="manual-training-layout">
           <div className="manual-category-list">
-            {CATEGORIES.map((category) => {
+            {MANUAL_CATEGORIES.map((category) => {
               const categoryExercises = exercisesByCategory[category] || [];
               const selectedCount = categoryExercises.filter((exercise) =>
                 chosenIds.includes(exercise.id),
@@ -584,7 +588,10 @@ export default function PlannerPage() {
                     onClick={() => setOpenCategory(isOpen ? null : category)}
                   >
                     <div>
-                      <strong>{CATEGORY_LABELS[category]}</strong>
+                      <strong className="manual-category-title">
+                        {category === "Videoguide" && <Video size={16} />}
+                        {CATEGORY_LABELS[category]}
+                      </strong>
                       <span>{CATEGORY_DESCRIPTIONS[category]}</span>
                     </div>
                     <div className="manual-category-meta">
