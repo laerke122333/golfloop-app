@@ -13,6 +13,8 @@ import RoundReviewPage from "./pages/RoundReviewPage";
 import SessionDetailPage from "./pages/SessionDetailPage";
 import HistoryPage from "./pages/HistoryPage";
 import ProfilePage from "./pages/ProfilePage";
+import GolfFitnessPage from "./pages/GolfFitnessPage.jsx";
+import FitnessSessionDetailPage from "./pages/FitnessSessionDetailPage.jsx";
 import { isSupabaseConfigured } from "./lib/supabaseClient";
 
 function SetupRequired() {
@@ -116,6 +118,11 @@ export default function App() {
           <Route path="/sessions/:sessionId" element={<SessionDetailPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/golf-fitness" element={<GolfFitnessPage />} />
+          <Route
+  path="/fitness-sessions/:sessionId"
+  element={<FitnessSessionDetailPage />}
+          />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

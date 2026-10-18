@@ -302,6 +302,53 @@ export default function SessionDetailPage() {
     setError("");
     setNotice("");
 
+    async function completeExerciseWithoutTimer(itemId) {
+      if (isCompleted) return;
+
+      const item = itemsRef.current.find((exercise) => exercise.id === itemId);
+
+      if (!item || item.completed) return;
+
+      setSaving(true);
+      setError("");
+      setNotice("");
+
+      try {
+        const { error: updateError } = await supabase
+          .from("training_session_exercises")
+          .update({
+            completed: true,
+            actual_duration_seconds: Number(item.actual_duration_seconds || 0),
+          })
+          .eq("id", item.id);
+
+        if (updateError) throw updateError;
+
+        const nextItems = itemsRef.current.map((exercise) =>
+          exercise.id === item.id
+            ? {
+                ...exercise,
+                completed: true,
+                actual_duration_seconds: Number(
+                  exercise.actual_duration_seconds || 0,
+                ),
+              }
+            : exercise,
+        );
+
+        itemsRef.current = nextItems;
+        setItems(nextItems);
+
+        setNotice(`${item.exercise_title} er markeret som færdig.`);
+      } catch (completeError) {
+        setError(
+          `Øvelsen kunne ikke markeres som færdig: ${completeError.message}`,
+        );
+      } finally {
+        setSaving(false);
+      }
+    }
+
     try {
       const finalSeconds = Math.max(0, Math.floor(getCurrentElapsed()));
 
@@ -532,7 +579,7 @@ export default function SessionDetailPage() {
   }
 
   async function completeTraining() {
-    if (!session || completedCount !== items.length || items.length === 0) {
+    if (!session || items.length === 0) {
       return;
     }
 
@@ -993,14 +1040,25 @@ export default function SessionDetailPage() {
               />
 
               {!isCompleted && !item.completed && !isActive && (
-                <button
-                  type="button"
-                  className="button button-outline session-exercise-start-button"
-                  onClick={() => startExercise(item.id)}
-                  disabled={saving}
-                >
-                  <Play size={16} /> Start denne øvelse
-                </button>
+                <div className="session-exercise-actions">
+                  <button
+                    type="button"
+                    className="button button-outline session-exercise-start-button"
+                    onClick={() => startExercise(item.id)}
+                    disabled={saving}
+                  >
+                    <Play size={16} /> Start med timer
+                  </button>
+
+                  <button
+                    type="button"
+                    className="button button-primary session-exercise-finish-button"
+                    onClick={() => completeExerciseWithoutTimer(item.id)}
+                    disabled={saving}
+                  >
+                    <Check size={16} /> Markér som færdig
+                  </button>
+                </div>
               )}
             </article>
           );

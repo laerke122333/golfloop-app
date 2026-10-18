@@ -1,0 +1,964 @@
+/* =========================================================
+   GOLF FITNESS PAGE
+   ========================================================= */
+
+.golf-fitness-page {
+  min-height: 100%;
+  background: #f5f6f1;
+  padding: 32px 24px 80px;
+}
+
+.golf-fitness-container {
+  width: min(1280px, 100%);
+  margin: 0 auto;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.golf-fitness-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.golf-fitness-eyebrow {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #6c7c6f;
+}
+
+.golf-fitness-header h1 {
+  margin: 0;
+  color: #19382b;
+  font-size: clamp(30px, 4vw, 46px);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.golf-fitness-header p {
+  max-width: 650px;
+  margin: 14px 0 0;
+  color: #68736c;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.golf-fitness-header-icon {
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  background: #dfe7dc;
+  color: #2d5842;
+}
+
+/* =========================================================
+   MESSAGES
+   ========================================================= */
+
+.golf-fitness-message {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border-radius: 14px;
+  font-size: 14px;
+}
+
+.golf-fitness-message.error {
+  background: #f7e9e5;
+  color: #8b4f44;
+}
+
+.golf-fitness-message.success {
+  justify-content: flex-start;
+  background: #e6efe5;
+  color: #315e40;
+}
+
+.golf-fitness-message button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* =========================================================
+   GENERAL CARDS
+   ========================================================= */
+
+.fitness-builder-card {
+  padding: 24px;
+  margin-bottom: 18px;
+  background: #ffffff;
+  border: 1px solid #e3e7df;
+  border-radius: 20px;
+  box-shadow: 0 5px 20px rgba(28, 54, 40, 0.04);
+}
+
+.fitness-section-heading {
+  margin-bottom: 20px;
+}
+
+.fitness-section-heading > div {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.fitness-step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: #edf2eb;
+  color: #486452;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.fitness-section-heading h2 {
+  margin: 0;
+  color: #203d30;
+  font-size: 19px;
+  letter-spacing: -0.02em;
+}
+
+.fitness-section-heading p {
+  margin: 5px 0 0;
+  color: #7a847d;
+  font-size: 13px;
+}
+
+/* =========================================================
+   LOCATION
+   ========================================================= */
+
+.fitness-location-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.fitness-location-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  text-align: left;
+  border: 1px solid #e1e6df;
+  border-radius: 16px;
+  background: #fbfcfa;
+  color: #203d30;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.fitness-location-option:hover {
+  transform: translateY(-1px);
+  border-color: #b9c9bc;
+}
+
+.fitness-location-option.active {
+  background: #eef4ed;
+  border-color: #66806d;
+}
+
+.fitness-option-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 13px;
+  background: #e2eadf;
+  color: #365d46;
+}
+
+.fitness-location-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fitness-location-text strong {
+  font-size: 15px;
+}
+
+.fitness-location-text span {
+  color: #7a847d;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.fitness-selected-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: #315b42;
+  color: #ffffff;
+}
+
+/* =========================================================
+   GOALS
+   ========================================================= */
+
+.fitness-goal-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.fitness-goal-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid #e0e5de;
+  border-radius: 999px;
+  background: #fafbf9;
+  color: #506057;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fitness-goal-button:hover {
+  border-color: #aebdaf;
+}
+
+.fitness-goal-button.active {
+  background: #315b42;
+  border-color: #315b42;
+  color: #ffffff;
+}
+
+/* =========================================================
+   TIME
+   ========================================================= */
+
+.fitness-time-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.fitness-time-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 48px;
+  border: 1px solid #e1e6df;
+  border-radius: 13px;
+  background: #fbfcfa;
+  color: #506057;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fitness-time-button:hover {
+  border-color: #aebdaf;
+}
+
+.fitness-time-button.active {
+  background: #315b42;
+  border-color: #315b42;
+  color: #ffffff;
+}
+
+/* =========================================================
+   TITLE
+   ========================================================= */
+
+.fitness-title-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border: 1px solid #dfe5dd;
+  border-radius: 13px;
+  outline: none;
+  background: #fbfcfa;
+  color: #203d30;
+  font: inherit;
+}
+
+.fitness-title-input:focus {
+  border-color: #718b78;
+  box-shadow: 0 0 0 3px rgba(113, 139, 120, 0.1);
+}
+
+/* =========================================================
+   LIBRARY LAYOUT
+   ========================================================= */
+
+.fitness-builder-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.8fr);
+  align-items: start;
+  gap: 18px;
+}
+
+.fitness-library-card,
+.fitness-workout-card {
+  background: #ffffff;
+  border: 1px solid #e3e7df;
+  border-radius: 20px;
+  box-shadow: 0 5px 20px rgba(28, 54, 40, 0.04);
+}
+
+.fitness-library-card {
+  padding: 24px;
+}
+
+.fitness-library-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 15px;
+  margin-bottom: 18px;
+}
+
+.fitness-library-header > div {
+  display: flex;
+  gap: 14px;
+}
+
+.fitness-library-header h2 {
+  margin: 0;
+  color: #203d30;
+  font-size: 19px;
+}
+
+.fitness-library-header p {
+  margin: 5px 0 0;
+  color: #7a847d;
+  font-size: 13px;
+}
+
+.fitness-count {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #f0f3ed;
+  color: #657269;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+.fitness-search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 13px;
+  margin-bottom: 12px;
+  border: 1px solid #e1e6df;
+  border-radius: 13px;
+  background: #fbfcfa;
+  color: #8a958e;
+}
+
+.fitness-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #203d30;
+  font: inherit;
+  font-size: 14px;
+}
+
+.fitness-search button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  border: 0;
+  background: transparent;
+  color: #7d8880;
+  cursor: pointer;
+}
+
+/* =========================================================
+   CATEGORY FILTER
+   ========================================================= */
+
+.fitness-category-filter {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 18px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.fitness-category-filter > svg {
+  flex-shrink: 0;
+  color: #7b877f;
+}
+
+.fitness-category-filter button {
+  flex-shrink: 0;
+  padding: 7px 11px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: #f1f4ef;
+  color: #68746c;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fitness-category-filter button.active {
+  background: #315b42;
+  color: #ffffff;
+}
+
+/* =========================================================
+   EXERCISE CARDS
+   ========================================================= */
+
+.fitness-exercise-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.fitness-exercise-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px;
+  border: 1px solid #e6eae4;
+  border-radius: 15px;
+  background: #fcfdfb;
+  transition: all 0.2s ease;
+}
+
+.fitness-exercise-card:hover {
+  border-color: #c4d0c5;
+  background: #f9fbf8;
+}
+
+.fitness-exercise-card.selected {
+  background: #f1f6ef;
+  border-color: #cad8cb;
+}
+
+.fitness-exercise-main {
+  min-width: 0;
+}
+
+.fitness-exercise-category {
+  margin-bottom: 4px;
+  color: #728078;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fitness-exercise-main h3 {
+  margin: 0;
+  color: #203d30;
+  font-size: 15px;
+}
+
+.fitness-exercise-main p {
+  margin: 5px 0 8px;
+  color: #77817a;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.fitness-exercise-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.fitness-exercise-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: #eef1ec;
+  color: #68746c;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.fitness-exercise-meta .has-video {
+  color: #41634e;
+  background: #e5eee5;
+}
+
+.fitness-exercise-action {
+  flex-shrink: 0;
+}
+
+.fitness-add-button,
+.fitness-added-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 94px;
+  justify-content: center;
+  padding: 9px 11px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.fitness-add-button {
+  border: 1px solid #315b42;
+  background: #315b42;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.fitness-add-button:hover {
+  background: #274b35;
+}
+
+.fitness-added-button {
+  border: 1px solid #d4ded3;
+  background: #edf3eb;
+  color: #57705d;
+}
+
+/* =========================================================
+   WORKOUT CARD
+   ========================================================= */
+
+.fitness-workout-card {
+  position: sticky;
+  top: 20px;
+  padding: 22px;
+}
+
+.fitness-workout-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 17px;
+}
+
+.fitness-workout-label {
+  display: block;
+  margin-bottom: 5px;
+  color: #7b877f;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.fitness-workout-header h2 {
+  margin: 0;
+  color: #203d30;
+  font-size: 19px;
+}
+
+.fitness-clear-button {
+  border: 0;
+  background: transparent;
+  color: #78847c;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fitness-workout-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  padding: 12px;
+  margin-bottom: 15px;
+  border-radius: 13px;
+  background: #f1f4ef;
+}
+
+.fitness-workout-summary div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.fitness-workout-summary strong {
+  color: #315b42;
+  font-size: 18px;
+}
+
+.fitness-workout-summary span {
+  color: #7b867e;
+  font-size: 10px;
+}
+
+/* =========================================================
+   EMPTY
+   ========================================================= */
+
+.fitness-workout-empty {
+  padding: 30px 18px;
+  text-align: center;
+}
+
+.fitness-workout-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px;
+  border-radius: 14px;
+  background: #edf2eb;
+  color: #52705c;
+}
+
+.fitness-workout-empty h3 {
+  margin: 0;
+  color: #304c3b;
+  font-size: 15px;
+}
+
+.fitness-workout-empty p {
+  max-width: 270px;
+  margin: 7px auto 0;
+  color: #7b857e;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   SELECTED EXERCISES
+   ========================================================= */
+
+.fitness-selected-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.fitness-selected-exercise {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid #e4e8e2;
+  border-radius: 12px;
+  background: #fbfcfa;
+}
+
+.fitness-selected-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: #e7eee5;
+  color: #46634f;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.fitness-selected-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.fitness-selected-info strong {
+  display: block;
+  overflow: hidden;
+  color: #304b3b;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fitness-selected-info span {
+  display: block;
+  margin-top: 2px;
+  color: #89938c;
+  font-size: 10px;
+}
+
+.fitness-selected-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.fitness-selected-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: #eef1ed;
+  color: #65726a;
+  cursor: pointer;
+}
+
+.fitness-selected-actions button:hover:not(:disabled) {
+  background: #e0e6df;
+}
+
+.fitness-selected-actions button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.fitness-selected-actions button.delete {
+  color: #8a756f;
+  background: #f3efed;
+}
+
+/* =========================================================
+   TIME STATUS
+   ========================================================= */
+
+.fitness-time-status {
+  padding: 13px 0 0;
+  margin-top: 14px;
+  border-top: 1px solid #e7ebe5;
+}
+
+.fitness-time-status > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #6d7971;
+  font-size: 12px;
+}
+
+.fitness-time-status strong {
+  color: #315b42;
+}
+
+.fitness-time-status small {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+.fitness-time-status .over-time {
+  color: #866b50;
+}
+
+.fitness-time-status .under-time {
+  color: #718075;
+}
+
+.fitness-time-status .on-time {
+  color: #52705c;
+}
+
+/* =========================================================
+   SAVE
+   ========================================================= */
+
+.fitness-save-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 18px;
+  padding: 13px 16px;
+  border: 0;
+  border-radius: 12px;
+  background: #315b42;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.fitness-save-button:hover:not(:disabled) {
+  background: #274b35;
+}
+
+.fitness-save-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   LOADING / EMPTY
+   ========================================================= */
+
+.fitness-loading,
+.fitness-empty {
+  padding: 50px 20px;
+  text-align: center;
+  color: #77827b;
+}
+
+.fitness-empty svg {
+  color: #708578;
+}
+
+.fitness-empty h3 {
+  margin: 10px 0 5px;
+  color: #304b3b;
+  font-size: 16px;
+}
+
+.fitness-empty p {
+  margin: 0 0 12px;
+  font-size: 13px;
+}
+
+.fitness-empty button {
+  padding: 9px 13px;
+  border: 1px solid #ccd7cc;
+  border-radius: 9px;
+  background: #f3f6f1;
+  color: #4e6857;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1000px) {
+  .fitness-builder-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .fitness-workout-card {
+    position: static;
+  }
+
+  .fitness-selected-list {
+    max-height: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .golf-fitness-page {
+    padding: 22px 14px 100px;
+  }
+
+  .golf-fitness-header {
+    margin-bottom: 22px;
+  }
+
+  .golf-fitness-header-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+  }
+
+  .golf-fitness-header p {
+    font-size: 14px;
+  }
+
+  .fitness-builder-card,
+  .fitness-library-card,
+  .fitness-workout-card {
+    padding: 17px;
+    border-radius: 17px;
+  }
+
+  .fitness-location-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fitness-time-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .fitness-library-header {
+    flex-direction: column;
+  }
+
+  .fitness-exercise-card {
+    align-items: flex-start;
+  }
+
+  .fitness-exercise-action {
+    align-self: center;
+  }
+
+  .fitness-add-button,
+  .fitness-added-button {
+    min-width: 78px;
+    padding: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .golf-fitness-header h1 {
+    font-size: 30px;
+  }
+
+  .fitness-time-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .fitness-exercise-card {
+    flex-direction: column;
+  }
+
+  .fitness-exercise-action {
+    width: 100%;
+  }
+
+  .fitness-add-button,
+  .fitness-added-button {
+    width: 100%;
+  }
+
+  .fitness-selected-actions button {
+    width: 30px;
+    height: 30px;
+  }
+}

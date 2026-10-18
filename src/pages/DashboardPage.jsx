@@ -1,20 +1,19 @@
-import React from "react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
-  CalendarDays,
   CheckCircle2,
   Clock3,
+  Dumbbell,
   Flag,
-  Plus,
-  Repeat2,
+  Play,
+  Sparkles,
   Target,
-  Trash2,
   TrendingUp,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../context/AuthContext";
+import "./DashboardPage.css";
 
 const categoryColors = {
   Jernslag: "green",
@@ -26,512 +25,454 @@ const categoryColors = {
 
 function formatDate(value) {
   if (!value) return "";
+
   return new Intl.DateTimeFormat("da-DK", {
     day: "numeric",
     month: "short",
   }).format(new Date(value));
 }
 
+function getStatusLabel(status) {
+  if (status === "completed") {
+    return "Gennemført";
+  }
+
+  if (status === "in_progress") {
+    return "I gang";
+  }
+
+  return "Planlagt";
+}
+
+function getStatusClass(status) {
+  if (status === "completed") {
+    return "dashboard-status-completed";
+  }
+
+  if (status === "in_progress") {
+    return "dashboard-status-progress";
+  }
+
+  return "dashboard-status-planned";
+}
+
 export default function DashboardPage() {
   const { user } = useAuth();
+
   const [sessions, setSessions] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [sessionCount, setSessionCount] = useState(0);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [repeatingSessionId, setRepeatingSessionId] = useState(null);
 
-
-  async function repeatTraining(session) {
-    setError("");
-    setRepeatingSessionId(session.id);
-
-    try {
-      // 1. Hent alle øvelser fra den gamle træning
-      const { data: originalExercises, error: exercisesError } = await supabase
-        .from("training_session_exercises")
-        .select(
-          "exercise_id,exercise_title,category,description,instructions,duration_minutes,position",
-        )
-        .eq("session_id", session.id)
-        .order("position", { ascending: true });
-
-      if (exercisesError) {
-        throw exercisesError;
-      }
-
-      if (!originalExercises?.length) {
-        throw new Error("Denne træning indeholder ingen øvelser.");
-      }
-
-      // 2. Opret en NY træning
-      const { data: newSession, error: sessionError } = await supabase
-        .from("training_sessions")
-        .insert({
-          user_id: user.id,
-          title: session.title || "Min træning",
-          duration_minutes: session.duration_minutes,
-          focus_areas: session.focus_areas || [],
-          facility: session.facility || "Flere faciliteter",
-          prioritize_recent_round: Boolean(session.prioritize_recent_round),
-          status: "planned",
-        })
-        .select()
-        .single();
-
-      if (sessionError) {
-        throw sessionError;
-      }
-
-      // 3. Kopiér øvelserne til den nye træning
-      const newExercises = originalExercises.map((exercise, index) => ({
-        session_id: newSession.id,
-        exercise_id: exercise.exercise_id,
-        exercise_title: exercise.exercise_title,
-        category: exercise.category,
-        description: exercise.description,
-        instructions: exercise.instructions || [],
-        duration_minutes: Number(exercise.duration_minutes),
-        position: index,
-
-        // Ny træning starter fra 0
-        completed: false,
-        result_notes: null,
-        actual_duration_seconds: 0,
-      }));
-
-      // 4. Gem de nye øvelser
-      const { error: insertError } = await supabase
-        .from("training_session_exercises")
-        .insert(newExercises);
-
-      if (insertError) {
-        // Hvis øvelserne ikke kan gemmes,
-        // så fjern den nye træning igen
-        await supabase
-          .from("training_sessions")
-          .delete()
-          .eq("id", newSession.id)
-          .eq("user_id", user.id);
-
-        throw insertError;
-      }
-
-      // 5. Åbn den nye kopi
-      navigate(`/sessions/${newSession.id}`);
-    } catch (repeatError) {
-      console.error("Fejl ved gentagelse af træning:", repeatError);
-
-      setError(`Træningen kunne ikke gentages: ${repeatError.message}`);
-    } finally {
-      setRepeatingSessionId(null);
-    }
-  }
-  
   useEffect(() => {
     let active = true;
+
     async function loadDashboard() {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       setError("");
+
       const [sessionResult, countResult, reviewResult] = await Promise.all([
         supabase
           .from("training_sessions")
-          .select(
-            "id,title,duration_minutes,status,created_at,focus_areas,facility,prioritize_recent_round",
-          )
-          .order("created_at", { ascending: false })
+          .select("id,title,duration_minutes,status,created_at,focus_areas")
+          .order("created_at", {
+            ascending: false,
+          })
           .limit(4),
-        supabase
-          .from("training_sessions")
-          .select("id", { count: "exact", head: true }),
+
+        supabase.from("training_sessions").select("id", {
+          count: "exact",
+          head: true,
+        }),
+
         supabase
           .from("round_reviews")
           .select("id,played_at,focus_areas,notes,created_at")
-          .order("played_at", { ascending: false })
+          .order("played_at", {
+            ascending: false,
+          })
           .limit(3),
       ]);
+
       if (!active) return;
-      if (sessionResult.error || countResult.error || reviewResult.error) {
-        setError(
-          (sessionResult.error || countResult.error || reviewResult.error)
-            ?.message || "Kunne ikke hente dine data.",
-        );
+
+      const firstError =
+        sessionResult.error || countResult.error || reviewResult.error;
+
+      if (firstError) {
+        setError(firstError.message || "Kunne ikke hente dine data.");
       }
+
       setSessions(sessionResult.data || []);
+
       setSessionCount(countResult.count || 0);
+
       setReviews(reviewResult.data || []);
+
       setLoading(false);
     }
-    if (user) loadDashboard();
+
+    loadDashboard();
+
     return () => {
       active = false;
     };
-  }, [user]);
+  }, [user?.id]);
 
-  async function deleteSession(sessionId) {
-    const sessionToDelete = sessions.find(
-      (session) => session.id === sessionId,
-    );
+  const latestReview = reviews[0];
 
-    if (!sessionToDelete) return;
-
-    const confirmed = window.confirm(
-      `Vil du slette "${sessionToDelete.title || "denne træning"}"?\n\nTræningen og dens øvelser, tider og noter bliver slettet permanent.`,
-    );
-
-    if (!confirmed) return;
-
-    setError("");
-
-    async function repeatTraining(session) {
-      setError("");
-      setRepeatingSessionId(session.id);
-
-      try {
-        // Hent øvelserne fra den gamle træning
-        const { data: originalExercises, error: exercisesError } =
-          await supabase
-            .from("training_session_exercises")
-            .select(
-              "exercise_id,exercise_title,category,description,instructions,duration_minutes,position",
-            )
-            .eq("session_id", session.id)
-            .order("position", { ascending: true });
-
-        if (exercisesError) throw exercisesError;
-
-        if (!originalExercises?.length) {
-          throw new Error("Træningen indeholder ingen øvelser.");
-        }
-
-        // Opret en NY træning
-        const { data: newSession, error: sessionError } = await supabase
-          .from("training_sessions")
-          .insert({
-            user_id: user.id,
-            title: session.title || "Min træning",
-            duration_minutes: session.duration_minutes,
-            focus_areas: session.focus_areas || [],
-            facility: session.facility || "Flere faciliteter",
-            prioritize_recent_round: Boolean(session.prioritize_recent_round),
-            status: "planned",
-          })
-          .select()
-          .single();
-
-        if (sessionError || !newSession) {
-          throw (
-            sessionError || new Error("Den nye træning kunne ikke oprettes.")
-          );
-        }
-
-        // Kopiér øvelserne – men nulstil resultat/tid
-        const newExercises = originalExercises.map((exercise, index) => ({
-          session_id: newSession.id,
-          exercise_id: exercise.exercise_id,
-          exercise_title: exercise.exercise_title,
-          category: exercise.category,
-          description: exercise.description,
-          instructions: exercise.instructions || [],
-          duration_minutes: Number(exercise.duration_minutes),
-          position: index,
-          completed: false,
-          result_notes: null,
-          actual_duration_seconds: 0,
-        }));
-
-        const { error: insertExercisesError } = await supabase
-          .from("training_session_exercises")
-          .insert(newExercises);
-
-        if (insertExercisesError) {
-          await supabase
-            .from("training_sessions")
-            .delete()
-            .eq("id", newSession.id)
-            .eq("user_id", user.id);
-
-          throw insertExercisesError;
-        }
-
-        // Åbn den nye kopi
-        navigate(`/sessions/${newSession.id}`);
-      } catch (repeatError) {
-        console.error("GolfLoop repeat-fejl:", repeatError);
-
-        setError(`Træningen kunne ikke gentages: ${repeatError.message}`);
-      } finally {
-        setRepeatingSessionId(null);
-      }
-    }
-
-    const { error: deleteError } = await supabase
-      .from("training_sessions")
-      .delete()
-      .eq("id", sessionId)
-      .eq("user_id", user.id);
-
-    if (deleteError) {
-      setError(`Træningen kunne ikke slettes: ${deleteError.message}`);
-      return;
-    }
-
-    setSessions((current) =>
-      current.filter((session) => session.id !== sessionId),
-    );
-
-    setSessionCount((current) => Math.max(0, current - 1));
-  }
+  const plannedSessions = useMemo(
+    () =>
+      sessions.filter(
+        (session) =>
+          session.status === "planned" || session.status === "in_progress",
+      ),
+    [sessions],
+  );
 
   const firstName =
     user?.email?.split("@")[0]?.split(/[._-]/)[0] || "golfspiller";
-  const latestReview = reviews[0];
-  const plannedCount = sessions.filter(
-    (session) =>
-      session.status === "planned" || session.status === "in_progress",
-  ).length;
 
   return (
     <div className="dashboard-page page-enter">
-      <div className="welcome-row">
-        <div>
-          <div className="eyebrow">DIT GOLFOVERBLIK</div>
-          <h1>
-            Hej, {firstName}
-            <span className="heading-dot">.</span>
-          </h1>
-          <p className="page-lead">
-            Små, målrettede træninger kan gøre en stor forskel. Hvad vil du
-            arbejde med i dag?
-          </p>
-        </div>
-        <Link to="/planner" className="button button-primary welcome-action">
-          <Plus size={18} /> Planlæg træning
-        </Link>
-      </div>
+      {/* =====================================================
+          HERO / VALG AF TRÆNING
+      ====================================================== */}
 
-      {error && (
-        <div className="alert alert-error">
-          {error}
-          <span className="muted">
-            {" "}
-            Kontrollér, at du har kørt SQL-scriptet i Supabase.
-          </span>
-        </div>
-      )}
+      <section className="dashboard-hero">
+        <div className="dashboard-hero-overlay" />
 
-      <section className="hero-card">
-        <div className="hero-text">
-          <span className="hero-pill">DIN NÆSTE FORBEDRING STARTER HER</span>
-          <h2>
-            Spil. Lær.
-            <br />
-            <em>Træn bedre.</em>
-          </h2>
-          <p>
-            Brug erfaringerne fra din seneste runde til at sammensætte en
-            træning, der passer til dig og den tid, du har.
-          </p>
-          <Link to="/round-review" className="hero-cta">
-            Evaluér min seneste runde <ArrowRight size={17} />
-          </Link>
-        </div>
-        <div className="hero-visual" aria-hidden="true">
-          <div className="hero-circle hero-circle-one" />
-          <div className="hero-circle hero-circle-two" />
-          <div className="hero-course-line hero-line-one" />
-          <div className="hero-course-line hero-line-two" />
-          <div className="hero-distance">DIT NÆSTE SLAG</div>
+        <div className="dashboard-hero-content">
+          <div className="dashboard-hero-heading">
+            <span className="dashboard-eyebrow">DIT GOLFOVERBLIK</span>
+
+            <h1>
+              Hvad vil du
+              <br />
+              træne i dag?
+              <span className="heading-dot">.</span>
+            </h1>
+
+            <p>Vælg den træning, der passer til dit mål.</p>
+          </div>
+
+          {/* TRÆNINGSTYPER */}
+
+          <div className="dashboard-training-grid">
+            <Link
+              to="/planner"
+              className="dashboard-training-card dashboard-training-golf"
+            >
+              <div className="dashboard-training-top">
+                <div className="dashboard-training-icon">
+                  <Flag size={24} />
+                </div>
+
+                <ArrowRight size={21} />
+              </div>
+
+              <div className="dashboard-training-content">
+                <span className="dashboard-card-label">GOLF</span>
+
+                <h2>Golftræning</h2>
+
+                <p>Forbedr dit golfspil med målrettede øvelser.</p>
+              </div>
+
+              <div className="dashboard-training-link">
+                Planlæg golftræning
+                <ArrowRight size={16} />
+              </div>
+            </Link>
+
+            <Link
+              to="/golf-fitness"
+              className="dashboard-training-card dashboard-training-fitness"
+            >
+              <div className="dashboard-training-top">
+                <div className="dashboard-training-icon">
+                  <Dumbbell size={23} />
+                </div>
+
+                <ArrowRight size={21} />
+              </div>
+
+              <div className="dashboard-training-content">
+                <span className="dashboard-card-label">GOLF FITNESS</span>
+
+                <h2>Styrketræning</h2>
+
+                <p>
+                  Bliv stærkere, mere stabil og bedre rustet til dit golfspil.
+                </p>
+              </div>
+
+              <div className="dashboard-training-link">
+                Planlæg styrketræning
+                <ArrowRight size={16} />
+              </div>
+            </Link>
+          </div>
         </div>
       </section>
 
-     
+      {/* =====================================================
+          ERROR
+      ====================================================== */}
 
-      <div className="dashboard-columns">
-        <section className="panel-section">
-          <div className="section-heading-row">
-            <div>
-              <div className="eyebrow">FORTSÆT HERFRA</div>
-              <h2>Dine træninger</h2>
+      {error && <div className="dashboard-alert">{error}</div>}
+
+      {/* =====================================================
+          DINE TRÆNINGER
+      ====================================================== */}
+
+      <section className="dashboard-section">
+        <div className="dashboard-section-heading">
+          <div>
+            <span className="dashboard-eyebrow">FORTSÆT HERFRA</span>
+
+            <h2>Dine træninger</h2>
+          </div>
+
+          <Link to="/history" className="dashboard-section-link">
+            Se alle
+            <ArrowRight size={16} />
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="dashboard-loading">
+            <span className="dashboard-spinner" />
+            Henter dine træninger…
+          </div>
+        ) : sessions.length ? (
+          <div className="dashboard-session-list">
+            {sessions.slice(0, 3).map((session) => (
+              <Link
+                key={session.id}
+                to={`/sessions/${session.id}`}
+                className="dashboard-session"
+              >
+                <div
+                  className={`dashboard-session-icon ${
+                    session.status === "completed"
+                      ? "dashboard-session-icon-complete"
+                      : ""
+                  }`}
+                >
+                  {session.status === "completed" ? (
+                    <CheckCircle2 size={21} />
+                  ) : (
+                    <Target size={21} />
+                  )}
+                </div>
+
+                <div className="dashboard-session-main">
+                  <strong>{session.title || "Min træning"}</strong>
+
+                  <div className="dashboard-session-info">
+                    <span>
+                      {(session.focus_areas || []).slice(0, 3).join(" · ") ||
+                        "Personlig træning"}
+                    </span>
+
+                    <span
+                      className={`dashboard-status ${getStatusClass(
+                        session.status,
+                      )}`}
+                    >
+                      {getStatusLabel(session.status)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="dashboard-session-meta">
+                  <strong>
+                    {session.duration_minutes} <small>min.</small>
+                  </strong>
+
+                  <span>{formatDate(session.created_at)}</span>
+                </div>
+
+                <ArrowRight className="dashboard-session-arrow" size={18} />
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="dashboard-empty">
+            <div className="dashboard-empty-icon">
+              <Play size={23} />
             </div>
-            <Link to="/planner" className="text-link">
-              Ny plan <ArrowRight size={15} />
+
+            <h3>Din første træning venter</h3>
+
+            <p>Vælg golftræning ovenfor, og kom i gang med din første plan.</p>
+
+            <Link to="/planner" className="dashboard-outline-button">
+              Planlæg golftræning
+              <ArrowRight size={16} />
             </Link>
           </div>
-          {loading ? (
-            <div className="empty-state compact">
-              <span className="spinner" /> Henter træninger…
-            </div>
-          ) : sessions.length ? (
-            <div className="session-list">
-              {sessions.map((session) => (
-                <div className="session-row" key={session.id}>
-                  <Link
-                    to={`/sessions/${session.id}`}
-                    className="session-row-link"
-                  >
-                    <div
-                      className={`session-row-icon ${
-                        session.status === "completed" ? "is-complete" : ""
-                      }`}
-                    >
-                      {session.status === "completed" ? (
-                        <CheckCircle2 size={20} />
-                      ) : (
-                        <Target size={20} />
-                      )}
-                    </div>
+        )}
+      </section>
 
-                    <div className="session-row-main">
-                      <strong>{session.title || "Min træning"}</strong>
+      {/* =====================================================
+          LILLE OVERBLIK
+      ====================================================== */}
 
-                      <span>
-                        {(session.focus_areas || []).join(" · ") ||
-                          "Personlig træning"}
-                      </span>
+      <section className="dashboard-mini-stats">
+        <div className="dashboard-mini-stat">
+          <div className="dashboard-mini-stat-icon">
+            <Target size={18} />
+          </div>
 
-                      <span
-                        className={`session-status-badge session-status-${session.status}`}
-                      >
-                        {session.status === "completed"
-                          ? "Gennemført"
-                          : session.status === "in_progress"
-                            ? "I gang"
-                            : "Gemt"}
-                      </span>
-                    </div>
+          <div>
+            <strong>{loading ? "—" : sessionCount}</strong>
 
-                    <div className="session-row-meta">
-                      <span>{session.duration_minutes} min.</span>
-                      <small>
-                        {formatDate(
-                          session.status === "completed"
-                            ? session.completed_at
-                            : session.created_at,
-                        )}
-                      </small>
-                    </div>
+            <span>Træninger i alt</span>
+          </div>
+        </div>
 
-                    <ArrowRight className="session-arrow" size={17} />
-                  </Link>
+        <div className="dashboard-mini-stat">
+          <div className="dashboard-mini-stat-icon">
+            <Clock3 size={18} />
+          </div>
 
-                  {session.status === "completed" && (
-                    <button
-                      type="button"
-                      className="session-repeat-button"
-                      onClick={() => repeatTraining(session)}
-                      disabled={repeatingSessionId === session.id}
-                    >
-                      <Repeat2 size={15} />
+          <div>
+            <strong>{loading ? "—" : plannedSessions.length}</strong>
 
-                      {repeatingSessionId === session.id
-                        ? "Opretter…"
-                        : "Gennemfør igen"}
-                    </button>
-                  )}
+            <span>Klar til dig</span>
+          </div>
+        </div>
 
-                  {/* Din slet-knap kommer her */}
+        <div className="dashboard-mini-stat">
+          <div className="dashboard-mini-stat-icon">
+            <TrendingUp size={18} />
+          </div>
 
-                  <button
-                    type="button"
-                    className="session-delete-button"
-                    onClick={() => deleteSession(session.id)}
-                    aria-label={`Slet ${session.title || "træning"}`}
-                    title="Slet træning"
-                  >
-                    <Trash2 size={17} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="empty-state">
-              <div className="empty-state-icon">
-                <CalendarDays size={23} />
-              </div>
-              <h3>Din første træning venter</h3>
-              <p>
-                Vælg hvor lang tid du har, og sammensæt en træning med dine egne
-                fokusområder.
-              </p>
-              <Link to="/planner" className="button button-outline">
-                Planlæg min første træning <ArrowRight size={16} />
-              </Link>
-            </div>
-          )}
-        </section>
+          <div>
+            <strong>{loading ? "—" : reviews.length}</strong>
 
-        <section className="panel-section recent-focus-panel">
-          <div className="section-heading-row">
-            <div>
-              <div className="eyebrow">LÆR AF DIT SPIL</div>
-              <h2>Efter runden</h2>
+            <span>Evalueringer</span>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          FOKUS
+      ====================================================== */}
+
+      <section className="dashboard-focus-section">
+        <div className="dashboard-section-heading">
+          <div>
+            <span className="dashboard-eyebrow">LÆR AF DIT SPIL</span>
+
+            <h2>Dit næste fokus</h2>
+          </div>
+
+          <div className="dashboard-focus-flag">
+            <Flag size={20} />
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="dashboard-focus-card">
+            <div className="dashboard-loading">
+              <span className="dashboard-spinner" />
+              Henter dit fokus…
             </div>
           </div>
-          {loading ? (
-            <div className="empty-state compact">Henter…</div>
-          ) : latestReview ? (
-            <div className="latest-review-card">
-              <div className="review-date">
-                Seneste evaluering · {formatDate(latestReview.played_at)}
-              </div>
-              <h3>Dit næste fokus</h3>
-              <div className="tag-list">
-                {(latestReview.focus_areas || []).map((area) => (
-                  <span
-                    className={`tag tag-${categoryColors[area] || "green"}`}
-                    key={area}
-                  >
-                    {area}
-                  </span>
-                ))}
-              </div>
-              {latestReview.notes && (
-                <p className="review-note">“{latestReview.notes}”</p>
-              )}
-              <Link
-                to="/planner"
-                className="button button-primary panel-full-button"
-              >
-                Planlæg med mit fokus <ArrowRight size={16} />
-              </Link>
-            </div>
-          ) : (
-            <div className="empty-state empty-state-small">
-              <div className="empty-state-icon">
-                <TrendingUp size={22} />
-              </div>
-              <h3>Find dit næste fokus</h3>
-              <p>Notér, hvad du gerne vil øve efter din næste runde.</p>
-              <Link to="/round-review" className="button button-outline">
-                Evaluér en runde
-              </Link>
-            </div>
-          )}
-        </section>
-      </div>
+        ) : latestReview ? (
+          <div className="dashboard-focus-card">
+            <div className="dashboard-focus-top">
+              <div>
+                <span className="dashboard-focus-date">
+                  SENESTE RUNDE · {formatDate(latestReview.played_at)}
+                </span>
 
-      <section className="bottom-prompt">
-        <div className="bottom-prompt-icon">
-          <BookOpenIcon />
+                <h3>Arbejd videre med</h3>
+              </div>
+
+              <Sparkles size={22} className="dashboard-focus-sparkle" />
+            </div>
+
+            <div className="dashboard-focus-tags">
+              {(latestReview.focus_areas || []).map((area) => (
+                <span
+                  key={area}
+                  className={`dashboard-focus-tag dashboard-focus-tag-${
+                    categoryColors[area] || "green"
+                  }`}
+                >
+                  {area}
+                </span>
+              ))}
+            </div>
+
+            {latestReview.notes && (
+              <p className="dashboard-focus-note">“{latestReview.notes}”</p>
+            )}
+
+            <p className="dashboard-focus-description">
+              GolfLoop bruger din seneste evaluering til at hjælpe dig med at
+              vælge, hvad du bør træne næste gang.
+            </p>
+
+            <Link to="/planner" className="dashboard-focus-button">
+              Planlæg med mit fokus
+              <ArrowRight size={18} />
+            </Link>
+          </div>
+        ) : (
+          <div className="dashboard-focus-card dashboard-focus-empty">
+            <div className="dashboard-focus-empty-icon">
+              <TrendingUp size={25} />
+            </div>
+
+            <div>
+              <h3>Find dit næste fokus</h3>
+
+              <p>
+                Evaluér din seneste runde og fortæl GolfLoop, hvad du gerne vil
+                forbedre.
+              </p>
+
+              <Link to="/round-review" className="dashboard-outline-button">
+                Evaluér min runde
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* =====================================================
+          LILLE FORKLARING
+      ====================================================== */}
+
+      <section className="dashboard-explainer">
+        <div className="dashboard-explainer-icon">
+          <Sparkles size={21} />
         </div>
+
         <div>
-          <strong>Brug for inspiration til øvelser?</strong>
+          <span>GOLFLOOP HJÆLPER DIG</span>
+
+          <h3>Spil. Lær. Træn bedre.</h3>
+
           <p>
-            Find konkrete øvelser til jernslag, wedges, putting og meget mere.
+            Træn dit golfspil, styrk din krop og brug dine runder til at finde
+            dit næste fokus.
           </p>
         </div>
-        <Link to="/exercises" className="text-link">
-          Se øvelser <ArrowRight size={15} />
-        </Link>
       </section>
     </div>
   );
-}
-
-function SparkleIcon() {
-  return <span className="tiny-sparkle">✳</span>;
-}
-function BookOpenIcon() {
-  return <Target size={20} />;
 }

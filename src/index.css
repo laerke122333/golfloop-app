@@ -4139,3 +4139,870 @@ code { border-radius: 4px; padding: 2px 4px; color: #405c3b; background: #f0f4eb
     font-size: 11px;
   }
 }
+/* =========================================
+   HISTORY – GOLF / GOLF FITNESS
+========================================= */
+
+.history-session-type {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6f8176;
+}
+
+.history-session-date-text {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.78rem;
+  color: #87938c;
+}
+
+.history-calendar-icon-fitness {
+  background: #edf1e9;
+  color: #5f735f;
+}
+
+.history-detail-location {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: #7a847d;
+}
+
+.history-fitness-prescription {
+  margin-top: 5px !important;
+  font-size: 0.8rem !important;
+  color: #65736a !important;
+  font-weight: 600;
+}
+
+.history-session-card-open .history-session-type {
+  color: #506a59;
+}
+.history-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #e4e9e4;
+}
+
+.history-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 12px;
+  font-size: 0.84rem;
+  font-weight: 750;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.history-action:hover {
+  transform: translateY(-1px);
+}
+
+.history-action-secondary {
+  flex: 1;
+  background: #f5f7f4;
+  border: 1px solid #dce3dc;
+  color: #314d3d;
+}
+
+.history-action-secondary:hover {
+  background: #edf2ed;
+}
+
+.history-action-primary {
+  flex: 1;
+  border: 1px solid #3f5d4b;
+  background: #3f5d4b;
+  color: #ffffff;
+}
+
+.history-action-primary:hover {
+  background: #344f40;
+}
+
+.history-action:disabled {
+  opacity: 0.6;
+  cursor: wait;
+  transform: none;
+}
+
+@media (max-width: 640px) {
+  .history-actions {
+    flex-direction: column;
+  }
+
+  .history-action {
+    width: 100%;
+  }
+}
+/* =========================================================
+   GOLFTRÆNING – NYT SESSION LAYOUT
+   ========================================================= */
+
+.session-detail-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-bottom: 80px;
+}
+
+/* ---------- HEADER ---------- */
+
+.session-detail-page .back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 20px;
+  color: #65736a;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.session-detail-page .back-link:hover {
+  color: #3f5d4b;
+}
+
+.session-detail-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 30px;
+  padding: 30px;
+  margin-bottom: 16px;
+  border: 1px solid #e1e7e1;
+  border-radius: 24px;
+  background: #f8faf7;
+}
+
+.session-detail-hero-copy {
+  min-width: 0;
+}
+
+.session-detail-hero h1 {
+  margin: 5px 0 10px;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1;
+  letter-spacing: -0.045em;
+  color: #263d30;
+}
+
+.session-detail-hero .page-lead {
+  max-width: 680px;
+  margin: 0;
+  color: #6d7971;
+  line-height: 1.65;
+}
+
+/* ---------- INFO TAGS ---------- */
+
+.session-summary-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.session-summary-tags span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #dfe6df;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #58675e;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+/* ---------- STATUS ---------- */
+
+.session-detail-hero .status-pill {
+  flex-shrink: 0;
+  padding: 9px 14px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.session-detail-hero .status-planned {
+  background: #edf2ed;
+  color: #52705d;
+}
+
+.session-detail-hero .status-in_progress {
+  background: #e5eee7;
+  color: #3f644b;
+}
+
+.session-detail-hero .status-completed {
+  background: #e9f0e9;
+  color: #45644e;
+}
+
+/* ---------- PROGRESS ---------- */
+
+.session-progress-panel {
+  margin-bottom: 18px;
+  padding: 20px 22px;
+  border: 1px solid #e1e7e1;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.progress-panel-copy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 12px;
+}
+
+.progress-panel-copy strong {
+  color: #304638;
+  font-size: 0.92rem;
+}
+
+.progress-panel-copy span {
+  color: #7b877f;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.progress-track {
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #edf1ed;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: #58755f;
+  transition: width 0.35s ease;
+}
+
+/* =========================================================
+   ACTIVE EXERCISE
+   ========================================================= */
+
+.active-exercise-panel {
+  position: relative;
+  margin-bottom: 20px;
+  padding: 30px;
+  overflow: hidden;
+  border: 1px solid #d8e2d9;
+  border-radius: 24px;
+  background: #f1f5f0;
+  box-shadow: 0 10px 30px rgba(45, 65, 52, 0.06);
+}
+
+.active-exercise-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 100%;
+  background: #55745d;
+}
+
+.active-exercise-panel .eyebrow {
+  margin-bottom: 7px;
+  color: #5c7564;
+}
+
+.active-exercise-panel h2 {
+  margin: 0 0 8px;
+  color: #263d30;
+  font-size: clamp(1.65rem, 3vw, 2.25rem);
+  letter-spacing: -0.035em;
+}
+
+.active-exercise-panel > p {
+  max-width: 650px;
+  margin: 0;
+  color: #69766e;
+  line-height: 1.65;
+}
+
+/* TIMER */
+
+.active-timer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 25px 0 20px;
+  padding: 18px 20px;
+  border: 1px solid #d8e2d9;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.active-timer svg {
+  color: #52715b;
+}
+
+.active-timer strong {
+  color: #2f4b38;
+  font-size: 2rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.active-timer span {
+  color: #7b877f;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* BUTTONS */
+
+.active-timer-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 10px;
+}
+
+.active-timer-actions .button {
+  min-height: 48px;
+  border-radius: 13px;
+  font-weight: 750;
+}
+
+/* ---------- INSTRUCTIONS ---------- */
+
+.active-exercise-panel .session-instructions {
+  margin: 18px 0;
+  border: 1px solid #dfe6df;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.active-exercise-panel .session-instructions summary {
+  padding: 13px 15px;
+  color: #40584a;
+  font-size: 0.82rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.active-exercise-panel .session-instructions ol {
+  margin: 0;
+  padding: 0 20px 17px 38px;
+}
+
+.active-exercise-panel .session-instructions li {
+  margin: 7px 0;
+  color: #68756d;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   ØVELSESLISTE
+   ========================================================= */
+
+.session-exercises-list {
+  display: grid;
+  gap: 12px;
+}
+
+.session-exercise-card {
+  padding: 20px;
+  border: 1px solid #e1e6e1;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 4px 15px rgba(45, 65, 52, 0.035);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.session-exercise-card:hover {
+  border-color: #d1dbd2;
+  box-shadow: 0 8px 22px rgba(45, 65, 52, 0.06);
+}
+
+.session-exercise-card.session-exercise-active {
+  border-color: #9db1a1;
+  background: #f4f7f3;
+}
+
+.session-exercise-card.session-exercise-done {
+  background: #fafcf9;
+}
+
+/* ---------- EXERCISE HEADER ---------- */
+
+.session-exercise-header {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 13px;
+}
+
+.session-exercise-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #edf2ed;
+  color: #526b5a;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.session-exercise-title {
+  min-width: 0;
+}
+
+.session-exercise-title .planned-category {
+  display: block;
+  margin-bottom: 4px;
+  color: #8a958e;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.session-exercise-title h2 {
+  margin: 0;
+  color: #304638;
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+
+.session-exercise-title p {
+  margin: 6px 0 0;
+  color: #7b867f;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+/* ---------- STATUS ---------- */
+
+.completed-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #52715b;
+}
+
+.completed-checkbox small {
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+/* ---------- TIME ---------- */
+
+.exercise-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 15px;
+  padding-top: 13px;
+  border-top: 1px solid #edf0ed;
+}
+
+.exercise-time-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #8a958e;
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.exercise-time-row strong {
+  color: #53675a;
+  font-size: 0.78rem;
+}
+
+/* ---------- NOTES ---------- */
+
+.session-exercise-card .field-label {
+  display: block;
+  margin-top: 16px;
+  margin-bottom: 7px;
+  color: #53645a;
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+.session-exercise-card .result-textarea {
+  min-height: 68px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+}
+
+/* ---------- START KNAP ---------- */
+
+.session-exercise-start-button {
+  width: 100%;
+  margin-top: 12px;
+  min-height: 42px;
+  border-radius: 11px;
+}
+
+/* =========================================================
+   START-VALG
+   ========================================================= */
+
+.session-start-panel {
+  margin-bottom: 20px;
+  padding: 26px;
+  border: 1px solid #e1e7e1;
+  border-radius: 22px;
+  background: #ffffff;
+}
+
+.session-start-panel .form-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.session-start-panel .form-step > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: #edf2ed;
+  color: #55725d;
+  font-size: 0.65rem;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+}
+
+.session-start-panel .form-step h2 {
+  margin: 0 0 5px;
+  color: #304638;
+  font-size: 1.15rem;
+}
+
+.session-start-panel .form-step p {
+  margin: 0;
+  color: #7b867f;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.session-start-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.session-start-option {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #e2e7e2;
+  border-radius: 13px;
+  background: #fafcf9;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.session-start-option:hover:not(:disabled) {
+  border-color: #b9c9bb;
+  background: #f3f7f3;
+  transform: translateY(-1px);
+}
+
+.session-start-option:disabled {
+  cursor: default;
+}
+
+.session-start-option-done {
+  opacity: 0.62;
+}
+
+.session-start-option-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.session-start-option-copy strong {
+  color: #304638;
+  font-size: 0.84rem;
+}
+
+.session-start-option-copy small {
+  color: #87928b;
+  font-size: 0.7rem;
+}
+
+/* =========================================================
+   BUNDENDE HANDLINGER
+   ========================================================= */
+
+.session-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.session-actions .button {
+  min-height: 46px;
+}
+
+.session-complete-hint {
+  margin: 0;
+  color: #87928b;
+  font-size: 0.76rem;
+}
+
+.completed-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 15px;
+  border: 1px solid #dce6dd;
+  border-radius: 12px;
+  background: #f1f6f1;
+  color: #4e6b56;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+/* =========================================================
+   GENNEMFØRT TRÆNING
+   ========================================================= */
+
+.training-time-summary,
+.next-step-card {
+  margin-top: 20px;
+  padding: 25px;
+  border: 1px solid #e1e7e1;
+  border-radius: 20px;
+  background: #ffffff;
+}
+
+.training-time-summary h2 {
+  margin: 4px 0 6px;
+  color: #304638;
+}
+
+.training-time-summary p,
+.next-step-card p {
+  margin: 0;
+  color: #7b867f;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.training-time-summary-list {
+  margin-top: 20px;
+  border-top: 1px solid #edf0ed;
+}
+
+.training-time-summary-row {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid #edf0ed;
+}
+
+.training-time-summary-row > span {
+  color: #8a958e;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.training-time-summary-row strong {
+  color: #3a5042;
+  font-size: 0.8rem;
+}
+
+.training-time-summary-row b {
+  color: #5b7061;
+  font-size: 0.78rem;
+}
+
+.next-step-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+/* =========================================================
+   DESKTOP: AKTIV ØVELSE + TRÆNINGSPLAN
+   ========================================================= */
+
+@media (min-width: 900px) {
+  .session-detail-page {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.75fr);
+    gap: 16px;
+    align-items: start;
+  }
+
+  .session-detail-page > .back-link,
+  .session-detail-page > .session-detail-hero,
+  .session-detail-page > .alert,
+  .session-detail-page > .session-progress-panel,
+  .session-detail-page > .session-start-panel,
+  .session-detail-page > .session-actions,
+  .session-detail-page > .training-time-summary,
+  .session-detail-page > .next-step-card {
+    grid-column: 1 / -1;
+  }
+
+  .active-exercise-panel {
+    grid-column: 1;
+    margin-bottom: 0;
+    position: sticky;
+    top: 20px;
+  }
+
+  .session-exercises-list {
+    grid-column: 2;
+  }
+
+  .session-exercises-list .session-exercise-card {
+    padding: 16px;
+  }
+
+  .session-exercises-list .session-exercise-header {
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+
+  .session-exercises-list .session-exercise-number {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .session-exercises-list .session-exercise-title h2 {
+    font-size: 0.92rem;
+  }
+
+  .session-exercises-list .session-exercise-title p {
+    font-size: 0.74rem;
+  }
+
+  .session-exercises-list .result-textarea {
+    min-height: 58px;
+  }
+}
+
+/* =========================================================
+   MOBIL
+   ========================================================= */
+
+@media (max-width: 899px) {
+  .session-detail-page {
+    padding-bottom: 110px;
+  }
+
+  .session-detail-hero {
+    flex-direction: column;
+    padding: 24px 20px;
+    border-radius: 20px;
+  }
+
+  .session-detail-hero h1 {
+    font-size: 2rem;
+  }
+
+  .session-detail-hero .status-pill {
+    align-self: flex-start;
+  }
+
+  .session-summary-tags {
+    gap: 6px;
+  }
+
+  .session-summary-tags span {
+    font-size: 0.7rem;
+  }
+
+  .progress-panel-copy {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .active-exercise-panel {
+    padding: 23px 19px;
+    border-radius: 20px;
+  }
+
+  .active-timer {
+    padding: 17px;
+  }
+
+  .active-timer strong {
+    font-size: 1.75rem;
+  }
+
+  .active-timer-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .session-start-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .session-exercise-header {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+
+  .completed-checkbox {
+    grid-column: 2;
+  }
+
+  .session-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .next-step-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .next-step-card .button {
+    width: 100%;
+  }
+}

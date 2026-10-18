@@ -19,10 +19,10 @@ import {
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../context/AuthContext";
 
-// UI-rækkefølgen er bevidst: Driver, Jernslag, Putts, Wedges / Short Game, Bunker.
-// I databasen hedder Putting stadig "Putting" og Wedges stadig "Wedges".
 const CATEGORIES = ["Driver", "Jernslag", "Putting", "Wedges", "Bunker"];
+
 const MANUAL_CATEGORIES = [...CATEGORIES, "Videoguide"];
+
 const TIME_OPTIONS = [15, 30, 45, 60, 90];
 
 const CATEGORY_LABELS = {
@@ -45,19 +45,35 @@ const CATEGORY_DESCRIPTIONS = {
 
 function allocateMinutes(total, count) {
   if (!count) return [];
+
   const base = Math.floor(total / count);
   const remainder = total % count;
+
   return Array.from(
     { length: count },
     (_, index) => base + (index < remainder ? 1 : 0),
   );
 }
 
+function toArray(value) {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
 export default function PlannerPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // null = vælg metode, auto = GolfLoop planlægger, manual = brugeren vælger selv.
   const [mode, setMode] = useState(null);
   const [openCategory, setOpenCategory] = useState(null);
 
@@ -65,11 +81,14 @@ export default function PlannerPage() {
   const [areas, setAreas] = useState(["Wedges", "Putting"]);
   const [prioritizeLatest, setPrioritizeLatest] = useState(true);
   const [latestReview, setLatestReview] = useState(null);
+
   const [exercises, setExercises] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
+
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState([]);
   const [saving, setSaving] = useState(false);
+
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [trainingName, setTrainingName] = useState("");
@@ -78,13 +97,19 @@ export default function PlannerPage() {
     let active = true;
 
     async function loadPlannerData() {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
+      setError("");
 
       const [exerciseResult, reviewResult, favoriteResult] = await Promise.all([
         supabase
           .from("exercises")
           .select(
-            "id,title,category,description,instructions,duration_minutes,facilities,difficulty,target,required_equipment,video_id",
+            "id,title,category,description,instructions,duration_minutes,difficulty,target,required_equipment,video_id",
           )
           .order("category")
           .order("title"),
@@ -104,15 +129,15 @@ export default function PlannerPage() {
 
       if (!active) return;
 
-      if (favoriteResult.error) {
-        setError(
-          `Favoritter kunne ikke hentes: ${favoriteResult.error.message}`,
-        );
-      }
-
       if (exerciseResult.error) {
         setError(
           `Kunne ikke hente øvelser: ${exerciseResult.error.message}. Har du kørt SQL-scriptet i Supabase?`,
+        );
+      }
+
+      if (favoriteResult.error) {
+        setError(
+          `Favoritter kunne ikke hentes: ${favoriteResult.error.message}`,
         );
       }
 
@@ -131,44 +156,42 @@ export default function PlannerPage() {
         ),
       );
 
-      console.log("FAVORITTER:", favoriteResult.data);
-
-      console.log(
-        "FAVORIT ØVELSER:",
-        (exerciseResult.data || [])
-          .filter((exercise) =>
-            (favoriteResult.data || []).some(
-              (favorite) => favorite.exercise_id === exercise.id,
-            ),
-          )
-          .map((exercise) => `${exercise.category}: ${exercise.title}`),
-      );
-
       setLoading(false);
     }
 
-    if (user) loadPlannerData();
+    loadPlannerData();
 
     return () => {
       active = false;
     };
-  }, [user]);
+  }, [user?.id]);
 
-  const availableAreas = useMemo(
-    () => [...new Set(exercises.map((exercise) => exercise.category))],
-    [exercises],
-  );
+  const availableAreas = useMemo(() => {
+    const categoriesWithExercises = new Set(
+      exercises
+        .map((exercise) => exercise.category)
+        .filter((category) => CATEGORIES.includes(category)),
+    );
+
+    return CATEGORIES.filter((category) =>
+      categoriesWithExercises.has(category),
+    );
+  }, [exercises]);
+
+  const latestReviewAreas = useMemo(() => {
+    if (!latestReview) return [];
+
+    return toArray(latestReview.focus_areas).filter((area) =>
+      CATEGORIES.includes(area),
+    );
+  }, [latestReview]);
 
   const effectiveAreas = useMemo(
-    () => [
-      ...new Set([
-        ...areas,
-        ...(prioritizeLatest && latestReview
-          ? latestReview.focus_areas || []
-          : []),
-      ]),
-    ],
-    [areas, prioritizeLatest, latestReview],
+    () =>
+      [
+        ...new Set([...areas, ...(prioritizeLatest ? latestReviewAreas : [])]),
+      ].filter((area) => availableAreas.includes(area)),
+    [areas, prioritizeLatest, latestReviewAreas, availableAreas],
   );
 
   const exercisesByCategory = useMemo(() => {
@@ -198,6 +221,7 @@ export default function PlannerPage() {
   }, [exercises, favoriteIds]);
 
   const chosenIds = plan.map((exercise) => exercise.id);
+
   const totalPlannedMinutes = plan.reduce(
     (sum, exercise) => sum + Number(exercise.duration_minutes || 0),
     0,
@@ -221,6 +245,7 @@ export default function PlannerPage() {
         ? current.filter((item) => item !== area)
         : [...current, area],
     );
+
     setPlan([]);
     resetMessages();
   }
@@ -230,11 +255,13 @@ export default function PlannerPage() {
 
     if (alreadySelected) {
       setPlan((current) => current.filter((item) => item.id !== exercise.id));
+
       resetMessages();
       return;
     }
 
     const next = [...plan, { ...exercise }];
+
     const nextTotal = next.reduce(
       (sum, item) => sum + Number(item.duration_minutes || 0),
       0,
@@ -267,14 +294,16 @@ export default function PlannerPage() {
 
     if (duration < effectiveAreas.length * 5) {
       setError(
-        `Du har valgt ${effectiveAreas.length} fokusområder. Vælg mindst ${effectiveAreas.length * 5} minutter, så der er tid til hvert område.`,
+        `Du har valgt ${effectiveAreas.length} fokusområder. Vælg mindst ${
+          effectiveAreas.length * 5
+        } minutter, så der er tid til hvert område.`,
       );
       return;
     }
 
     const groups = effectiveAreas.map((category) => ({
       category,
-      items: exercises.filter((exercise) => exercise.category === category),
+      items: exercisesByCategory[category] || [],
       cursor: 0,
     }));
 
@@ -294,20 +323,21 @@ export default function PlannerPage() {
 
     const selected = [];
 
-    // Giv hvert valgt fokusområde mindst én øvelse.
     groups.forEach((group) => {
       selected.push(group.items[group.cursor]);
+
       group.cursor += 1;
     });
 
-    // Fyld derefter op med flere øvelser på tværs af fokusområderne.
     let safety = 0;
 
     while (selected.length < desiredCount && safety < 100) {
       let added = false;
 
       for (const group of groups) {
-        if (selected.length >= desiredCount) break;
+        if (selected.length >= desiredCount) {
+          break;
+        }
 
         const next = group.items[group.cursor];
 
@@ -318,7 +348,10 @@ export default function PlannerPage() {
         }
       }
 
-      if (!added) break;
+      if (!added) {
+        break;
+      }
+
       safety += 1;
     }
 
@@ -348,6 +381,7 @@ export default function PlannerPage() {
 
     if (mode === "auto") {
       const durations = allocateMinutes(Number(minutes), next.length);
+
       setPlan(
         next.map((exercise, index) => ({
           ...exercise,
@@ -363,114 +397,96 @@ export default function PlannerPage() {
   }
 
   async function savePlan(startNow = false) {
-    resetMessages();
-
-    if (!plan.length) {
-      setError(
-        mode === "manual"
-          ? "Vælg mindst én øvelse, før du starter træningen."
-          : "Sammensæt en træningsplan først.",
-      );
-      return;
-    }
-
-    const sessionMinutes =
-      mode === "manual" ? totalPlannedMinutes : Number(minutes);
-
-    if (
-      !Number.isInteger(sessionMinutes) ||
-      sessionMinutes < 5 ||
-      sessionMinutes > 240
-    ) {
-      setError("Din træning skal være mellem 5 og 240 minutter.");
-      return;
-    }
-
-    if (mode === "auto" && totalPlannedMinutes !== Number(minutes)) {
-      setError(
-        "Tidsfordelingen passer ikke helt. Klik på “Sammensæt min træning” igen.",
-      );
+    if (!user?.id || plan.length === 0 || saving) {
       return;
     }
 
     setSaving(true);
+    setError("");
+    setNotice("");
 
-    const dateLabel = new Intl.DateTimeFormat("da-DK", {
-      day: "numeric",
-      month: "short",
-    }).format(new Date());
-
-    const manualFocusAreas = [
-      ...new Set(plan.map((exercise) => exercise.category)),
-    ];
-
-    const sessionFocusAreas =
-      mode === "manual" ? manualFocusAreas : effectiveAreas;
-
-    const { data: session, error: sessionError } = await supabase
-      .from("training_sessions")
-      .insert({
-        user_id: user.id,
-        title: trainingName.trim() || "Min træning",
-        duration_minutes: sessionMinutes,
-        focus_areas: sessionFocusAreas,
-        // Alle faciliteter antages tilgængelige i GolfLoop.
-        facility: "Flere faciliteter",
-        prioritize_recent_round:
-          mode === "auto" && Boolean(prioritizeLatest && latestReview),
-        status: startNow ? "in_progress" : "planned",
-      })
-      .select()
-      .single();
-
-    if (sessionError || !session) {
-      setError(sessionError?.message || "Træningen kunne ikke gemmes.");
-      setSaving(false);
-      return;
-    }
-
-    const rows = plan.map((exercise, index) => ({
-      session_id: session.id,
-      exercise_id: exercise.id,
-      exercise_title: exercise.title,
-      category: exercise.category,
-      description: exercise.description,
-      instructions: exercise.instructions || [],
-      duration_minutes: Number(exercise.duration_minutes),
-      position: index,
-      completed: false,
-    }));
-
-    const { error: exercisesError } = await supabase
-      .from("training_session_exercises")
-      .insert(rows);
-
-    if (exercisesError) {
-      await supabase.from("training_sessions").delete().eq("id", session.id);
-
-      setError(
-        `Planen blev oprettet, men øvelserne kunne ikke gemmes: ${exercisesError.message}`,
+    try {
+      const sessionMinutes = plan.reduce(
+        (total, exercise) => total + Number(exercise.duration_minutes || 0),
+        0,
       );
-      setSaving(false);
-      return;
-    }
 
-    navigate(startNow ? `/sessions/${session.id}` : "/");
+      const manualFocusAreas = [
+        ...new Set(plan.map((exercise) => exercise.category)),
+      ];
+
+      const sessionFocusAreas =
+        mode === "manual" ? manualFocusAreas : effectiveAreas;
+
+      const { data: session, error: sessionError } = await supabase
+        .from("training_sessions")
+        .insert({
+          user_id: user.id,
+          title: trainingName.trim() || "Min træning",
+          duration_minutes: sessionMinutes,
+          focus_areas: sessionFocusAreas,
+          facility: "Flere faciliteter",
+          prioritize_recent_round:
+            mode === "auto" && Boolean(prioritizeLatest && latestReview),
+          status: startNow ? "in_progress" : "planned",
+        })
+        .select("id")
+        .single();
+
+      if (sessionError || !session) {
+        throw new Error(
+          sessionError?.message || "Træningen kunne ikke gemmes.",
+        );
+      }
+
+      const sessionExercises = plan.map((exercise, index) => ({
+        session_id: session.id,
+        exercise_id: exercise.id,
+        exercise_title: exercise.title,
+        category: exercise.category,
+        description: exercise.description,
+        instructions: exercise.instructions || [],
+        duration_minutes: Number(exercise.duration_minutes || 0),
+        sort_order: index,
+      }));
+
+      const { error: exercisesError } = await supabase
+        .from("training_session_exercises")
+        .insert(sessionExercises);
+
+      if (exercisesError) {
+        await supabase.from("training_sessions").delete().eq("id", session.id);
+
+        throw new Error(
+          `Træningen kunne ikke gemmes: ${exercisesError.message}`,
+        );
+      }
+
+      setNotice(startNow ? "Træningen er startet." : "Træningen er gemt.");
+
+      navigate(startNow ? `/sessions/${session.id}` : "/");
+    } catch (saveError) {
+      setError(saveError?.message || "Træningen kunne ikke gemmes.");
+    } finally {
+      setSaving(false);
+    }
   }
 
-  // Første skærm: brugeren vælger, hvem der planlægger træningen.
   if (!mode) {
     return (
       <div className="page-enter planner-page">
         <div className="page-header">
           <div>
             <div className="eyebrow">DIN TRÆNING</div>
+
             <h1>
-              Hvordan vil du træne<span className="heading-dot">.</span>
+              Hvordan vil du træne
+              <span className="heading-dot">.</span>
             </h1>
+
             <p className="page-lead">
-              Vælg om GolfLoop skal sammensætte træningen for dig, eller om du
-              selv vil vælge dine øvelser.
+              Vælg, hvordan du vil sammensætte din golftræning. GolfLoop kan
+              enten planlægge den for dig, eller du kan vælge øvelserne selv.
             </p>
           </div>
         </div>
@@ -482,50 +498,56 @@ export default function PlannerPage() {
           </div>
         )}
 
-        <div className="training-choice-grid">
-          <button
-            type="button"
-            className="training-choice-card"
-            onClick={() => chooseMode("auto")}
-          >
-            <div className="training-choice-icon">
-              <Sparkles size={24} />
-            </div>
-            <div>
-              <span className="eyebrow">AUTOMATISK</span>
-              <h2>GolfLoop planlægger for mig</h2>
-              <p>
-                Vælg tid og fokusområder, så sammensætter GolfLoop en konkret
-                træning.
-              </p>
-            </div>
-            <ArrowRight size={20} />
-          </button>
+        <section className="form-panel">
+          <div className="training-choice-grid">
+            <button
+              type="button"
+              className="training-choice-card"
+              onClick={() => chooseMode("auto")}
+            >
+              <div className="training-choice-icon">
+                <Sparkles size={24} />
+              </div>
 
-          <button
-            type="button"
-            className="training-choice-card"
-            onClick={() => chooseMode("manual")}
-          >
-            <div className="training-choice-icon">
-              <Check size={24} />
-            </div>
-            <div>
-              <span className="eyebrow">SELVVALGT</span>
-              <h2>Jeg planlægger selv</h2>
-              <p>
-                Vælg selv øvelser fra Driver, jernslag, putts, wedges / short
-                game og bunker.
-              </p>
-            </div>
-            <ArrowRight size={20} />
-          </button>
-        </div>
+              <div>
+                <span className="eyebrow">AUTOMATISK</span>
+
+                <h2>GolfLoop planlægger for mig</h2>
+
+                <p>
+                  Vælg tid og fokusområder, så sammensætter GolfLoop en konkret
+                  træning.
+                </p>
+              </div>
+
+              <ArrowRight size={20} />
+            </button>
+
+            <button
+              type="button"
+              className="training-choice-card"
+              onClick={() => chooseMode("manual")}
+            >
+              <div className="training-choice-icon">
+                <Check size={24} />
+              </div>
+
+              <div>
+                <span className="eyebrow">SELVVALGT</span>
+
+                <h2>Jeg planlægger selv</h2>
+
+                <p>Vælg selv øvelser fra de tilgængelige golfkategorier.</p>
+              </div>
+
+              <ArrowRight size={20} />
+            </button>
+          </div>
+        </section>
       </div>
     );
   }
 
-  // Manuel træning: kategorier kan åbnes, og konkrete øvelser kan vælges.
   if (mode === "manual") {
     return (
       <div className="page-enter planner-page">
@@ -539,15 +561,20 @@ export default function PlannerPage() {
               <ArrowLeft size={16} />
               Tilbage
             </button>
+
             <div className="eyebrow">SELVVALGT TRÆNING</div>
+
             <h1>
-              Vælg dine øvelser<span className="heading-dot">.</span>
+              Vælg dine øvelser
+              <span className="heading-dot">.</span>
             </h1>
+
             <p className="page-lead">
-              Vælg de øvelser, du selv vil have med. Du kan vælge på tværs af
-              alle fem kategorier.
+              Vælg de golføvelser, du vil have med i din træning. Favoritter
+              vises øverst i hver kategori.
             </p>
           </div>
+
           <div className="page-header-icon">
             <Check size={24} />
           </div>
@@ -562,7 +589,8 @@ export default function PlannerPage() {
 
         {loading && (
           <div className="inline-loading">
-            <span className="spinner" /> Henter øvelser fra dit bibliotek…
+            <LoaderCircle size={18} className="spin" />
+            Henter øvelser fra dit bibliotek…
           </div>
         )}
 
@@ -570,9 +598,11 @@ export default function PlannerPage() {
           <div className="manual-category-list">
             {MANUAL_CATEGORIES.map((category) => {
               const categoryExercises = exercisesByCategory[category] || [];
+
               const selectedCount = categoryExercises.filter((exercise) =>
                 chosenIds.includes(exercise.id),
               ).length;
+
               const isOpen = openCategory === category;
 
               return (
@@ -590,16 +620,20 @@ export default function PlannerPage() {
                     <div>
                       <strong className="manual-category-title">
                         {category === "Videoguide" && <Video size={16} />}
+
                         {CATEGORY_LABELS[category]}
                       </strong>
+
                       <span>{CATEGORY_DESCRIPTIONS[category]}</span>
                     </div>
+
                     <div className="manual-category-meta">
                       {selectedCount > 0 && (
                         <span className="manual-selected-count">
                           {selectedCount} valgt
                         </span>
                       )}
+
                       <ChevronDown
                         size={20}
                         className={isOpen ? "rotate-180" : ""}
@@ -663,9 +697,9 @@ export default function PlannerPage() {
                                   Udstyr
                                 </span>
 
-                                {exercise.required_equipment?.length ? (
+                                {toArray(exercise.required_equipment).length ? (
                                   <span className="planner-equipment-list">
-                                    {exercise.required_equipment.map(
+                                    {toArray(exercise.required_equipment).map(
                                       (equipment) => (
                                         <span
                                           className="planner-equipment-tag"
@@ -696,12 +730,15 @@ export default function PlannerPage() {
           <aside className="plan-preview-panel">
             <div className="plan-preview-top">
               <div className="eyebrow">DIN TRÆNING</div>
+
               <div className="plan-preview-icon">
                 <Check size={21} />
               </div>
+
               <h2>
                 {plan.length ? "Dine valgte øvelser" : "Vælg dine øvelser"}
               </h2>
+
               <p>
                 {plan.length
                   ? "Du kan ændre dit valg, før du starter."
@@ -712,12 +749,15 @@ export default function PlannerPage() {
             <div className="plan-total">
               <div>
                 <span>Samlet tid</span>
+
                 <strong>
                   {totalPlannedMinutes} <small>min.</small>
                 </strong>
               </div>
+
               <div className="plan-total-time">
                 <Clock3 size={17} />
+
                 <span>
                   {plan.length} {plan.length === 1 ? "øvelse" : "øvelser"}
                 </span>
@@ -734,16 +774,20 @@ export default function PlannerPage() {
                     <div className="planned-exercise-index">
                       {String(index + 1).padStart(2, "0")}
                     </div>
+
                     <div className="planned-exercise-copy">
                       <span className="planned-category">
                         {CATEGORY_LABELS[exercise.category]}
                       </span>
+
                       <strong>{exercise.title}</strong>
+
                       <small>
                         {exercise.duration_minutes} min. ·{" "}
                         {exercise.target || "Se øvelsesbeskrivelsen"}
                       </small>
                     </div>
+
                     <button
                       type="button"
                       className="icon-button danger-icon"
@@ -761,7 +805,9 @@ export default function PlannerPage() {
                 <div className="plan-empty-illustration">
                   <Check size={35} strokeWidth={1.3} />
                 </div>
+
                 <strong>Ingen øvelser valgt endnu</strong>
+
                 <p>Vælg øvelser fra en eller flere kategorier.</p>
               </div>
             )}
@@ -774,13 +820,14 @@ export default function PlannerPage() {
                 type="text"
                 value={trainingName}
                 onChange={(event) => setTrainingName(event.target.value)}
-                placeholder="Fx Wedges før turnering"
+                placeholder="Fx Træning før turnering"
                 maxLength={60}
               />
             </div>
 
             <div className="plan-preview-footer">
               <button
+                type="button"
                 className="button button-primary button-large panel-full-button"
                 disabled={!plan.length || saving}
                 onClick={() => savePlan(true)}
@@ -800,6 +847,7 @@ export default function PlannerPage() {
               </button>
 
               <button
+                type="button"
                 className="button button-outline panel-full-button"
                 disabled={!plan.length || saving}
                 onClick={() => savePlan(false)}
@@ -818,7 +866,6 @@ export default function PlannerPage() {
     );
   }
 
-  // Automatisk træning: den eksisterende GolfLoop-planlægger.
   return (
     <div className="page-enter planner-page">
       <div className="page-header">
@@ -831,15 +878,20 @@ export default function PlannerPage() {
             <ArrowLeft size={16} />
             Tilbage
           </button>
+
           <div className="eyebrow">AUTOMATISK PLAN</div>
+
           <h1>
-            Planlæg træning<span className="heading-dot">.</span>
+            Planlæg træning
+            <span className="heading-dot">.</span>
           </h1>
+
           <p className="page-lead">
-            Fortæl, hvor lang tid du har, og hvad du vil træne. Så sammensætter
-            GolfLoop en plan til dig.
+            Fortæl, hvor lang tid du har, og hvad du vil træne. GolfLoop
+            sammensætter en konkret golftræning.
           </p>
         </div>
+
         <div className="page-header-icon">
           <Sparkles size={24} />
         </div>
@@ -847,13 +899,15 @@ export default function PlannerPage() {
 
       {error && (
         <div className="alert alert-error">
-          <AlertCircle size={18} /> <span>{error}</span>
+          <AlertCircle size={18} />
+          <span>{error}</span>
         </div>
       )}
 
       {loading && (
         <div className="inline-loading">
-          <span className="spinner" /> Henter øvelser fra dit bibliotek…
+          <LoaderCircle size={18} className="spin" />
+          Henter øvelser fra dit bibliotek…
         </div>
       )}
 
@@ -862,8 +916,10 @@ export default function PlannerPage() {
           <section className="form-panel">
             <div className="form-step">
               <span>01</span>
+
               <div>
                 <h2>Hvor lang tid har du?</h2>
+
                 <p>Vælg den tid, du realistisk kan bruge.</p>
               </div>
             </div>
@@ -883,6 +939,7 @@ export default function PlannerPage() {
                   }`}
                 >
                   <strong>{value}</strong>
+
                   <span>min.</span>
                 </button>
               ))}
@@ -907,6 +964,7 @@ export default function PlannerPage() {
                   }}
                   aria-label="Eget antal minutter"
                 />
+
                 <span>min.</span>
               </label>
             </div>
@@ -915,37 +973,42 @@ export default function PlannerPage() {
           <section className="form-panel">
             <div className="form-step">
               <span>02</span>
+
               <div>
                 <h2>Hvad vil du træne?</h2>
+
                 <p>Vælg flere områder, hvis du ønsker det.</p>
               </div>
             </div>
 
             <div className="area-grid">
-              {CATEGORIES.filter((category) =>
-                availableAreas.includes(category),
-              ).map((category) => {
-                const checked = areas.includes(category);
+              {CATEGORIES.map((category) => {
+                const active = areas.includes(category);
+
+                const available = availableAreas.includes(category);
 
                 return (
                   <button
                     key={category}
                     type="button"
                     className={`area-option ${
-                      checked ? "area-option-active" : ""
+                      active ? "area-option-active" : ""
                     }`}
                     onClick={() => toggleArea(category)}
-                    aria-pressed={checked}
+                    disabled={!loading && !available}
+                    aria-pressed={active}
                   >
                     <span
                       className={`area-option-mark ${
-                        checked ? "" : "area-option-mark-empty"
+                        active ? "" : "area-option-mark-empty"
                       }`}
                     >
-                      {checked && <Check size={15} />}
+                      {active && <Check size={15} />}
                     </span>
+
                     <span className="area-option-copy">
                       <strong>{CATEGORY_LABELS[category]}</strong>
+
                       <small>{CATEGORY_DESCRIPTIONS[category]}</small>
                     </span>
                   </button>
@@ -954,25 +1017,29 @@ export default function PlannerPage() {
             </div>
           </section>
 
-          {latestReview && (
+          {latestReview && latestReviewAreas.length > 0 && (
             <section className="round-focus-card">
               <div className="round-focus-icon">
                 <Flag size={20} />
               </div>
+
               <div className="round-focus-content">
                 <strong>Brug mit fokus fra seneste runde</strong>
+
                 <p>
                   Tilføj dine fokusområder fra din seneste runde til
                   træningsplanen.
                 </p>
+
                 <div className="tag-list">
-                  {(latestReview.focus_areas || []).map((area) => (
+                  {latestReviewAreas.map((area) => (
                     <span className="tag tag-green" key={area}>
-                      {CATEGORY_LABELS[area] || area}
+                      {CATEGORY_LABELS[area]}
                     </span>
                   ))}
                 </div>
               </div>
+
               <label
                 className="switch"
                 aria-label="Brug fokusområder fra seneste runde"
@@ -986,6 +1053,7 @@ export default function PlannerPage() {
                     resetMessages();
                   }}
                 />
+
                 <span className="switch-slider" />
               </label>
             </section>
@@ -994,7 +1062,7 @@ export default function PlannerPage() {
           <button
             className="button button-primary button-large generate-button"
             type="button"
-            disabled={loading}
+            disabled={loading || !availableAreas.length}
             onClick={generatePlan}
           >
             <Sparkles size={18} />
@@ -1006,10 +1074,13 @@ export default function PlannerPage() {
         <aside className="plan-preview-panel">
           <div className="plan-preview-top">
             <div className="eyebrow">DIN TRÆNINGSPLAN</div>
+
             <div className="plan-preview-icon">
               <Sparkles size={21} />
             </div>
+
             <h2>{plan.length ? "Klar til træning" : "Din næste træning"}</h2>
+
             <p>
               {plan.length
                 ? "Justér øvelserne, og gem planen, når den passer dig."
@@ -1020,13 +1091,16 @@ export default function PlannerPage() {
           <div className="plan-total">
             <div>
               <span>Samlet tid</span>
+
               <strong>
                 {plan.length ? totalPlannedMinutes : Number(minutes) || 0}{" "}
                 <small>min.</small>
               </strong>
             </div>
+
             <div className="plan-total-time">
               <Clock3 size={17} />
+
               <span>
                 {plan.length} {plan.length === 1 ? "øvelse" : "øvelser"}
               </span>
@@ -1043,16 +1117,20 @@ export default function PlannerPage() {
                   <div className="planned-exercise-index">
                     {String(index + 1).padStart(2, "0")}
                   </div>
+
                   <div className="planned-exercise-copy">
                     <span className="planned-category">
                       {CATEGORY_LABELS[exercise.category]}
                     </span>
+
                     <strong>{exercise.title}</strong>
+
                     <small>
                       {exercise.duration_minutes} min. ·{" "}
                       {exercise.target || "Se øvelsesbeskrivelsen"}
                     </small>
                   </div>
+
                   <button
                     type="button"
                     className="icon-button danger-icon"
@@ -1070,7 +1148,9 @@ export default function PlannerPage() {
               <div className="plan-empty-illustration">
                 <Sparkles size={35} strokeWidth={1.3} />
               </div>
+
               <strong>Din træning, på din måde</strong>
+
               <p>
                 Vælg tid og fokus til venstre. GolfLoop fordeler minutterne
                 mellem konkrete øvelser.
@@ -1081,14 +1161,15 @@ export default function PlannerPage() {
           {notice && (
             <div className="alert alert-success plan-notice">
               <Check size={16} />
+
               <span>{notice}</span>
             </div>
           )}
 
           <div className="plan-preview-footer">
             <p>
-              <Flag size={15} /> Vælg, om du vil træne nu eller gemme planen til
-              senere.
+              <Flag size={15} />
+              Vælg, om du vil træne nu eller gemme planen til senere.
             </p>
 
             <div className="training-name-field">
@@ -1101,12 +1182,13 @@ export default function PlannerPage() {
                 type="text"
                 value={trainingName}
                 onChange={(event) => setTrainingName(event.target.value)}
-                placeholder="Fx Wedges før turnering"
+                placeholder="Fx Træning før turnering"
                 maxLength={60}
               />
             </div>
 
             <button
+              type="button"
               className="button button-primary button-large panel-full-button"
               disabled={!plan.length || saving}
               onClick={() => savePlan(true)}
@@ -1129,9 +1211,14 @@ export default function PlannerPage() {
               type="button"
               className="button button-outline"
               onClick={() => savePlan(false)}
-              disabled={saving}
+              disabled={!plan.length || saving}
             >
-              <Save size={17} /> Gem til senere
+              {saving ? (
+                <LoaderCircle size={17} className="spin" />
+              ) : (
+                <Save size={17} />
+              )}
+              Gem til senere
             </button>
           </div>
         </aside>
@@ -1139,6 +1226,7 @@ export default function PlannerPage() {
 
       <div className="planner-footnote">
         <span className="footnote-mark">i</span>
+
         <p>
           Planen fordeler den samlede tid på de valgte øvelser. Brug den som en
           fleksibel guide, og tilpas længde og antal bolde efter dit niveau.

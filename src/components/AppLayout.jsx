@@ -12,24 +12,26 @@ import {
   Target,
   X,
   Trophy,
+  Dumbbell,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 const navItems = [
-  { to: "/", label: "Overblik", icon: Activity, end: true },
+  { to: "/", label: "Hjem", icon: Activity, end: true },
   { to: "/planner", label: "Planlæg træning", icon: CalendarDays },
+  { to: "/golf-fitness", label: "Golf Fitness", icon: Dumbbell },
   { to: "/exercises", label: "Øvelser", icon: Target },
   { to: "/challenges", label: "Challenges", icon: Trophy },
-  { to: "/history", label: "Tidligere", icon: History },
+  { to: "/history", label: "Tidligere træninger", icon: History },
   { to: "/round-review", label: "Efter runden", icon: Flag },
   { to: "/profile", label: "Profil", icon: Activity },
 ];
 
 const mobileBottomItems = [
-  { to: "/", label: "Overblik", icon: Activity, end: true },
+  { to: "/", label: "Hjem", icon: Activity, end: true },
   { to: "/planner", label: "Træning", icon: CalendarDays },
-  { to: "/challenges", label: "Challenges", icon: Trophy },
-  { to: "/round-review", label: "Runden", icon: Flag },
+  { to: "/golf-fitness", label: "Golf Fitness", icon: Dumbbell },
+  { to: "/round-review", label: "Efter runden", icon: Flag },
 ];
 
 export default function AppLayout() {

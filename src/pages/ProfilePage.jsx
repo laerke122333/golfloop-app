@@ -5,6 +5,7 @@ import {
   Check,
   ClipboardCheck,
   Clock3,
+  Dumbbell,
   LoaderCircle,
   TrendingUp,
   Wrench,
@@ -16,13 +17,28 @@ import { useAuth } from "../context/AuthContext";
 export default function ProfilePage() {
   const { user } = useAuth();
 
+  // =========================
+  // GOLFUDSTYR
+  // =========================
   const [equipment, setEquipment] = useState([]);
   const [selectedEquipment, setSelectedEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // =========================
+  // FITNESSUDSTYR
+  // =========================
+  const [fitnessEquipment, setFitnessEquipment] = useState([]);
+  const [selectedFitnessEquipment, setSelectedFitnessEquipment] = useState([]);
+  const [fitnessLoading, setFitnessLoading] = useState(true);
+  const [fitnessSavingId, setFitnessSavingId] = useState(null);
+
   const [savingId, setSavingId] = useState(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
+  // =========================
+  // STATISTIK
+  // =========================
   const [sessions, setSessions] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [sessionCount, setSessionCount] = useState(0);
@@ -31,6 +47,10 @@ export default function ProfilePage() {
   const [developmentResults, setDevelopmentResults] = useState([]);
   const [selectedDevelopmentExercise, setSelectedDevelopmentExercise] =
     useState("");
+
+  // =========================================================
+  // HENT GOLFUDSTYR
+  // =========================================================
 
   useEffect(() => {
     let active = true;
@@ -76,6 +96,7 @@ export default function ProfilePage() {
       }
 
       setEquipment(equipmentResult.data || []);
+
       setSelectedEquipment(
         (userEquipmentResult.data || []).map((item) => item.equipment_id),
       );
@@ -90,7 +111,75 @@ export default function ProfilePage() {
     };
   }, [user?.id]);
 
-  // ⬇️ SÆT DENNE USEEFFECT IND HER
+  // =========================================================
+  // HENT FITNESSUDSTYR
+  // =========================================================
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadFitnessEquipment() {
+      if (!user?.id) {
+        setFitnessLoading(false);
+        return;
+      }
+
+      setFitnessLoading(true);
+
+      const [fitnessEquipmentResult, userFitnessEquipmentResult] =
+        await Promise.all([
+          supabase
+            .from("fitness_equipment")
+            .select("id,name,description")
+            .eq("is_default", true)
+            .order("name"),
+
+          supabase
+            .from("user_fitness_equipment")
+            .select("equipment_id")
+            .eq("user_id", user.id),
+        ]);
+
+      if (!active) return;
+
+      if (fitnessEquipmentResult.error) {
+        setError(
+          `Kunne ikke hente fitnessudstyr: ${fitnessEquipmentResult.error.message}`,
+        );
+        setFitnessLoading(false);
+        return;
+      }
+
+      if (userFitnessEquipmentResult.error) {
+        setError(
+          `Kunne ikke hente dit fitnessudstyr: ${userFitnessEquipmentResult.error.message}`,
+        );
+        setFitnessLoading(false);
+        return;
+      }
+
+      setFitnessEquipment(fitnessEquipmentResult.data || []);
+
+      setSelectedFitnessEquipment(
+        (userFitnessEquipmentResult.data || []).map(
+          (item) => item.equipment_id,
+        ),
+      );
+
+      setFitnessLoading(false);
+    }
+
+    loadFitnessEquipment();
+
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
+
+  // =========================================================
+  // HENT STATISTIK
+  // =========================================================
+
   useEffect(() => {
     if (!user?.id) return;
 
@@ -104,7 +193,9 @@ export default function ProfilePage() {
           supabase
             .from("training_sessions")
             .select("id,title,duration_minutes,status,created_at,focus_areas")
-            .order("created_at", { ascending: false })
+            .order("created_at", {
+              ascending: false,
+            })
             .limit(4),
 
           supabase.from("training_sessions").select("id", {
@@ -115,7 +206,9 @@ export default function ProfilePage() {
           supabase
             .from("round_reviews")
             .select("id,played_at,focus_areas,notes,created_at")
-            .order("played_at", { ascending: false })
+            .order("played_at", {
+              ascending: false,
+            })
             .limit(3),
 
           supabase
@@ -125,7 +218,9 @@ export default function ProfilePage() {
             )
             .not("result_score", "is", null)
             .not("result_total", "is", null)
-            .order("created_at", { ascending: true })
+            .order("created_at", {
+              ascending: true,
+            })
             .limit(100),
         ]);
 
@@ -169,7 +264,10 @@ export default function ProfilePage() {
     };
   }, [user?.id]);
 
-  // ⬇️ DIN EKSISTERENDE FUNKTION SKAL BLIVE HER
+  // =========================================================
+  // GEM / FJERN GOLFUDSTYR
+  // =========================================================
+
   async function toggleEquipment(equipmentId) {
     if (!user?.id || savingId) return;
 
@@ -216,6 +314,61 @@ export default function ProfilePage() {
       setSavingId(null);
     }
   }
+
+  // =========================================================
+  // GEM / FJERN FITNESSUDSTYR
+  // =========================================================
+
+  async function toggleFitnessEquipment(equipmentId) {
+    if (!user?.id || fitnessSavingId) return;
+
+    setFitnessSavingId(equipmentId);
+    setError("");
+    setNotice("");
+
+    const isSelected = selectedFitnessEquipment.includes(equipmentId);
+
+    try {
+      if (isSelected) {
+        const { error: deleteError } = await supabase
+          .from("user_fitness_equipment")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("equipment_id", equipmentId);
+
+        if (deleteError) {
+          throw deleteError;
+        }
+
+        setSelectedFitnessEquipment((current) =>
+          current.filter((id) => id !== equipmentId),
+        );
+      } else {
+        const { error: insertError } = await supabase
+          .from("user_fitness_equipment")
+          .insert({
+            user_id: user.id,
+            equipment_id: equipmentId,
+          });
+
+        if (insertError) {
+          throw insertError;
+        }
+
+        setSelectedFitnessEquipment((current) => [...current, equipmentId]);
+      }
+
+      setNotice("Dit hjemmetræningsudstyr er gemt.");
+    } catch (fitnessError) {
+      setError(`Fitnessudstyret kunne ikke gemmes: ${fitnessError.message}`);
+    } finally {
+      setFitnessSavingId(null);
+    }
+  }
+
+  // =========================================================
+  // UDVIKLING
+  // =========================================================
 
   const plannedCount = sessions.filter(
     (session) =>
@@ -268,6 +421,11 @@ export default function ProfilePage() {
       : null;
 
   const latestResult = selectedResults[selectedResults.length - 1] || null;
+
+  // =========================================================
+  // RENDER
+  // =========================================================
+
   return (
     <div className="page-enter profile-page">
       <Link to="/" className="back-link">
@@ -277,16 +435,14 @@ export default function ProfilePage() {
 
       <header className="page-header">
         <div>
-          <div className="eyebrow">DIN PROFIL</div>
 
           <h1>
-            Dine træninger
+            Din profil
             <span className="heading-dot">.</span>
           </h1>
 
           <p className="page-lead">
-            Her kan du se dine træningsplaner, evalueringer og vælge de
-            redskaber, du har adgang til.
+            Her kan du indstaste hvilket udstyr du har rådighed til. Golf vil kun foreslå træninger med det udstyr du har.
           </p>
         </div>
       </header>
@@ -300,51 +456,19 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <section className="stats-grid" aria-label="Dine tal">
-        <div className="stat-card">
-          <div className="stat-icon stat-icon-green">
-            <CalendarDays size={20} />
-          </div>
+     
 
-          <div className="stat-label">Træningsplaner</div>
-
-          <div className="stat-value">{statsLoading ? "—" : sessionCount}</div>
-
-          <div className="stat-foot">Oprettet i alt</div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon stat-icon-sand">
-            <Clock3 size={20} />
-          </div>
-
-          <div className="stat-label">Planlagt lige nu</div>
-
-          <div className="stat-value">{statsLoading ? "—" : plannedCount}</div>
-
-          <div className="stat-foot">Venter på dig</div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon stat-icon-green">
-            <ClipboardCheck size={20} />
-          </div>
-
-          <div className="stat-label">Seneste evalueringer</div>
-
-          <div className="stat-value">
-            {statsLoading ? "—" : reviews.length}
-          </div>
-
-          <div className="stat-foot">Maks. 3 seneste vises</div>
-        </div>
-      </section>
+      {/* =====================================================
+          UDVIKLING
+      ===================================================== */}
 
       <section className="development-panel">
         <div className="development-heading">
           <div>
             <div className="eyebrow">DIN UDVIKLING</div>
+
             <h2>Se hvordan du bliver bedre</h2>
+
             <p>
               GolfLoop gemmer dine resultater, så du kan følge din udvikling
               over tid.
@@ -364,6 +488,7 @@ export default function ProfilePage() {
 
             <div>
               <strong>Din udvikling starter her</strong>
+
               <p>
                 Gennemfør en øvelse og gem dit resultat, så begynder GolfLoop at
                 vise din udvikling.
@@ -393,6 +518,7 @@ export default function ProfilePage() {
             <div className="development-summary">
               <div className="development-stat">
                 <span>Gennemsnit</span>
+
                 <strong>
                   {latestAverage.toFixed(1)}
                   <small>/10</small>
@@ -402,8 +528,10 @@ export default function ProfilePage() {
               {latestResult && (
                 <div className="development-stat">
                   <span>Seneste</span>
+
                   <strong>
                     {latestResult.result_score}
+
                     <small>/{latestResult.result_total}</small>
                   </strong>
                 </div>
@@ -412,6 +540,7 @@ export default function ProfilePage() {
               {developmentChange !== null && (
                 <div className="development-stat">
                   <span>Udvikling</span>
+
                   <strong
                     className={
                       developmentChange >= 0
@@ -523,6 +652,7 @@ export default function ProfilePage() {
               {developmentChange !== null && developmentChange > 0 ? (
                 <>
                   <span>📈</span>
+
                   <p>
                     <strong>Du bliver bedre!</strong> Din gennemsnitlige score
                     er steget {developmentChange.toFixed(0)}% sammenlignet med
@@ -532,6 +662,7 @@ export default function ProfilePage() {
               ) : developmentChange !== null && developmentChange < 0 ? (
                 <>
                   <span>💪</span>
+
                   <p>
                     <strong>Bliv ved!</strong> Din seneste score er lidt lavere
                     end tidligere. Mere træning kan gøre forskellen.
@@ -540,6 +671,7 @@ export default function ProfilePage() {
               ) : (
                 <>
                   <span>🎯</span>
+
                   <p>
                     <strong>Fortsæt træningen.</strong> Når du får flere
                     resultater, bliver din udvikling endnu tydeligere.
@@ -551,14 +683,19 @@ export default function ProfilePage() {
         )}
       </section>
 
+      {/* =====================================================
+          GOLFUDSTYR
+      ===================================================== */}
+
       <section className="profile-equipment-panel">
         <div className="profile-equipment-heading">
+          
           <div>
-            <span className="eyebrow">TRÆNINGSREDSKABER</span>
+            <span className="eyebrow">GOLFTRÆNINGSREDSKABER</span>
 
             <h2>Hvad har du adgang til?</h2>
 
-            <p>Vælg de redskaber, du kan bruge, når du træner.</p>
+            <p>Vælg de redskaber, du kan bruge når du træner.</p>
           </div>
 
           <span className="equipment-count">
@@ -618,15 +755,91 @@ export default function ProfilePage() {
         )}
       </section>
 
+      {/* =====================================================
+          NYT: HJEMMETRÆNING / FITNESSUDSTYR
+      ===================================================== */}
+
+      <section className="profile-equipment-panel">
+        <div className="profile-equipment-heading">
+          <div>
+            <span className="eyebrow">HJEMMETRÆNING</span>
+
+            <h2>Hvad har du derhjemme?</h2>
+
+            <p>Vælg det udstyr, du har adgang til når du træner hjemme.</p>
+          </div>
+
+          <span className="equipment-count">
+            {selectedFitnessEquipment.length} valgt
+          </span>
+        </div>
+
+        {fitnessLoading ? (
+          <div className="inline-loading">
+            <LoaderCircle size={18} className="spin" />
+            Henter fitnessudstyr…
+          </div>
+        ) : (
+          <div className="equipment-selection-grid">
+            {fitnessEquipment.map((item) => {
+              const selected = selectedFitnessEquipment.includes(item.id);
+
+              const saving = fitnessSavingId === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`equipment-option ${
+                    selected ? "equipment-option-selected" : ""
+                  }`}
+                  onClick={() => toggleFitnessEquipment(item.id)}
+                  disabled={fitnessSavingId !== null}
+                >
+                  <div className="equipment-option-icon">
+                    {saving ? (
+                      <LoaderCircle size={20} className="spin" />
+                    ) : selected ? (
+                      <Check size={20} />
+                    ) : (
+                      <Dumbbell size={20} />
+                    )}
+                  </div>
+
+                  <div className="equipment-option-copy">
+                    <strong>{item.name}</strong>
+
+                    <span>{item.description}</span>
+                  </div>
+
+                  <div
+                    className={`equipment-checkbox ${
+                      selected ? "equipment-checkbox-selected" : ""
+                    }`}
+                  >
+                    {selected && <Check size={15} />}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* =====================================================
+          INFO
+      ===================================================== */}
+
       <section className="profile-equipment-info">
-        <strong>Så bruger GolfLoop dine valg</strong>
+        <strong>Sådan bruger GolfLoop dit udstyr</strong>
 
         <p>
-          Øvelser uden særligt udstyr kan altid foreslås. Hvis en øvelse kræver
-          et redskab, vil GolfLoop kun foreslå den, når du har valgt det på din
-          profil.
+          GolfLoop bruger dine valg til at tilpasse din golf træning og hjemmetræningen. Øvelser
+          uden udstyr kan altid foreslås, mens øvelser med krav til bestemt
+          udstyr kun foreslås, når du har det tilgængeligt.
         </p>
       </section>
+
     </div>
   );
 }
