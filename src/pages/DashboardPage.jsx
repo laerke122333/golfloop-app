@@ -170,54 +170,36 @@ export default function DashboardPage() {
               to="/planner"
               className="dashboard-training-card dashboard-training-golf"
             >
-              <div className="dashboard-training-top">
-                <div className="dashboard-training-icon">
-                  <Flag size={24} />
-                </div>
-
-                <ArrowRight size={21} />
+              <div className="dashboard-training-icon">
+                <Flag size={21} />
               </div>
 
               <div className="dashboard-training-content">
-                <span className="dashboard-card-label">GOLF</span>
-
                 <h2>Golftræning</h2>
-
-                <p>Forbedr dit golfspil med målrettede øvelser.</p>
+                <p>Forbedr dit golfspil med klare og effektive øvelser.</p>
               </div>
 
-              <div className="dashboard-training-link">
-                Planlæg golftræning
-                <ArrowRight size={16} />
-              </div>
+              <span className="dashboard-training-arrow" aria-hidden="true">
+                <ArrowRight size={17} />
+              </span>
             </Link>
 
             <Link
               to="/golf-fitness"
               className="dashboard-training-card dashboard-training-fitness"
             >
-              <div className="dashboard-training-top">
-                <div className="dashboard-training-icon">
-                  <Dumbbell size={23} />
-                </div>
-
-                <ArrowRight size={21} />
+              <div className="dashboard-training-icon">
+                <Dumbbell size={21} />
               </div>
 
               <div className="dashboard-training-content">
-                <span className="dashboard-card-label">GOLF FITNESS</span>
-
                 <h2>Styrketræning</h2>
-
-                <p>
-                  Bliv stærkere, mere stabil og bedre rustet til dit golfspil.
-                </p>
+                <p>Bliv stærkere, mere stabil og bedre rustet til golf.</p>
               </div>
 
-              <div className="dashboard-training-link">
-                Planlæg styrketræning
-                <ArrowRight size={16} />
-              </div>
+              <span className="dashboard-training-arrow" aria-hidden="true">
+                <ArrowRight size={17} />
+              </span>
             </Link>
           </div>
         </div>
@@ -323,48 +305,7 @@ export default function DashboardPage() {
         )}
       </section>
 
-      {/* =====================================================
-          LILLE OVERBLIK
-      ====================================================== */}
-
-      <section className="dashboard-mini-stats">
-        <div className="dashboard-mini-stat">
-          <div className="dashboard-mini-stat-icon">
-            <Target size={18} />
-          </div>
-
-          <div>
-            <strong>{loading ? "—" : sessionCount}</strong>
-
-            <span>Træninger i alt</span>
-          </div>
-        </div>
-
-        <div className="dashboard-mini-stat">
-          <div className="dashboard-mini-stat-icon">
-            <Clock3 size={18} />
-          </div>
-
-          <div>
-            <strong>{loading ? "—" : plannedSessions.length}</strong>
-
-            <span>Klar til dig</span>
-          </div>
-        </div>
-
-        <div className="dashboard-mini-stat">
-          <div className="dashboard-mini-stat-icon">
-            <TrendingUp size={18} />
-          </div>
-
-          <div>
-            <strong>{loading ? "—" : reviews.length}</strong>
-
-            <span>Evalueringer</span>
-          </div>
-        </div>
-      </section>
-
+      
       {/* =====================================================
           FOKUS
       ====================================================== */}
@@ -377,9 +318,7 @@ export default function DashboardPage() {
             <h2>Dit næste fokus</h2>
           </div>
 
-          <div className="dashboard-focus-flag">
-            <Flag size={20} />
-          </div>
+          
         </div>
 
         {loading ? (
@@ -425,7 +364,7 @@ export default function DashboardPage() {
               vælge, hvad du bør træne næste gang.
             </p>
 
-            <Link to="/planner" className="dashboard-focus-button">
+            <Link to="/round-review" className="dashboard-focus-button">
               Planlæg med mit fokus
               <ArrowRight size={18} />
             </Link>
@@ -453,26 +392,7 @@ export default function DashboardPage() {
         )}
       </section>
 
-      {/* =====================================================
-          LILLE FORKLARING
-      ====================================================== */}
-
-      <section className="dashboard-explainer">
-        <div className="dashboard-explainer-icon">
-          <Sparkles size={21} />
-        </div>
-
-        <div>
-          <span>GOLFLOOP HJÆLPER DIG</span>
-
-          <h3>Spil. Lær. Træn bedre.</h3>
-
-          <p>
-            Træn dit golfspil, styrk din krop og brug dine runder til at finde
-            dit næste fokus.
-          </p>
-        </div>
-      </section>
+      
     </div>
   );
 }

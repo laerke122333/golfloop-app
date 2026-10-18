@@ -836,3 +836,284 @@
     padding: 20px;
   }
 }
+
+/* ==========================================
+   FORSIDEN – JUSTERET TIL DET NYE DESIGN
+========================================== */
+
+.dashboard-hero {
+  min-height: 510px;
+  background-image: url("/golf-hero.jpg");
+  background-size: cover;
+  background-position: center 30%;
+  border-radius: 30px;
+  overflow: hidden;
+}
+
+.dashboard-hero-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(13, 36, 26, 0.16) 0%,
+    rgba(13, 36, 26, 0.04) 38%,
+    rgba(8, 30, 22, 0.58) 100%
+  );
+}
+
+.dashboard-hero-content {
+  min-height: 510px;
+  padding: 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Overskrift */
+
+.dashboard-hero-heading h1 {
+  max-width: 500px;
+  font-size: clamp(38px, 5vw, 60px);
+  line-height: 0.98;
+  letter-spacing: -0.05em;
+}
+
+.dashboard-hero-heading p {
+  max-width: 420px;
+}
+
+/* De to træningskort */
+
+.dashboard-training-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  width: 100%;
+  max-width: 680px;
+  margin-top: 24px;
+}
+
+.dashboard-training-card {
+  display: flex;
+  min-width: 0;
+  min-height: 215px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 22px;
+  border-radius: 22px;
+  text-decoration: none;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.dashboard-training-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(12, 42, 29, 0.18);
+}
+
+.dashboard-training-golf {
+  color: white;
+  background: rgba(12, 76, 54, 0.95);
+}
+
+.dashboard-training-fitness {
+  color: #183b2d;
+  background: rgba(250, 251, 246, 0.96);
+}
+
+/* Ikoner */
+
+.dashboard-training-icon {
+  display: grid;
+  width: 43px;
+  height: 43px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 50%;
+}
+
+.dashboard-training-golf .dashboard-training-icon {
+  color: white;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.dashboard-training-fitness .dashboard-training-icon {
+  color: #456c42;
+  background: #e5edd8;
+}
+
+/* Tekst */
+
+.dashboard-training-content {
+  width: 100%;
+  margin-top: 14px;
+}
+
+.dashboard-training-content h2 {
+  margin-bottom: 7px;
+  font-size: 23px;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+}
+
+.dashboard-training-content p {
+  max-width: 260px;
+  margin-bottom: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  opacity: 0.86;
+}
+
+/* Runde pile nederst på kortene */
+
+.dashboard-training-arrow {
+  display: grid;
+  width: 35px;
+  height: 35px;
+  flex-shrink: 0;
+  margin-top: 14px;
+  place-items: center;
+  border-radius: 50%;
+}
+
+.dashboard-training-golf .dashboard-training-arrow {
+  color: #1d533b;
+  background: #fff;
+}
+
+.dashboard-training-fitness .dashboard-training-arrow {
+  color: white;
+  background: #6b9b57;
+}
+
+/* ==========================================
+   MOBIL
+========================================== */
+
+@media (max-width: 760px) {
+  .dashboard-page {
+    width: calc(100% - 12px);
+    padding-top: 10px;
+  }
+
+  .dashboard-hero {
+    min-height: 340px;
+    border-radius: 18px;
+    background-size: 145% auto;
+    background-position: 22% 49%;
+  }
+
+  .dashboard-hero-overlay {
+    background: linear-gradient(
+      180deg,
+      rgba(13, 36, 26, 0.16) 0%,
+      rgba(13, 36, 26, 0.02) 35%,
+      rgba(8, 30, 22, 0.40) 100%
+    );
+  }
+
+  .dashboard-hero-content {
+    min-height: 340px;
+    padding: 15px 12px 12px;
+  }
+
+  .dashboard-hero-heading .dashboard-eyebrow {
+    margin-bottom: 6px;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+  }
+
+  .dashboard-hero-heading h1 {
+    max-width: 230px;
+    margin-bottom: 7px;
+    font-size: 31px;
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+  }
+
+  .dashboard-hero-heading p {
+    max-width: 230px;
+    margin-bottom: 0;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  /* Vigtigt: To kolonner – ikke én */
+
+  .dashboard-training-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+    width: 100%;
+    max-width: none;
+    margin-top: 12px;
+  }
+
+  .dashboard-training-card {
+    min-height: 160px;
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .dashboard-training-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .dashboard-training-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .dashboard-training-content {
+    margin-top: 7px;
+  }
+
+  .dashboard-training-content h2 {
+    margin-bottom: 5px;
+    font-size: 15px;
+    line-height: 1.1;
+  }
+
+  .dashboard-training-content p {
+    font-size: 10px;
+    line-height: 1.3;
+  }
+
+  .dashboard-training-arrow {
+    width: 28px;
+    height: 28px;
+    margin-top: 8px;
+  }
+
+  .dashboard-training-arrow svg {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+/* Ekstra små skærme */
+
+@media (max-width: 360px) {
+  .dashboard-hero,
+  .dashboard-hero-content {
+    min-height: 335px;
+  }
+
+  .dashboard-hero-heading h1 {
+    font-size: 28px;
+  }
+
+  .dashboard-training-card {
+    min-height: 158px;
+    padding: 10px;
+  }
+
+  .dashboard-training-content h2 {
+    font-size: 14px;
+  }
+
+  .dashboard-training-content p {
+    font-size: 9.5px;
+  }
+}
